@@ -43,13 +43,12 @@ Toda fonte tabular é convertida para um registro único e todas as visualizaç�
 |--------------|-----------------------------------------------------|
 | `index.html` | Aplicação completa (HTML + CSS + JS, sem backend)   |
 | `README.md`  | Esta documentação                                   |
-| `CNAME`      | Domínio do GitHub Pages (`confrontodiaristas.com`)  |
 
 ## Publicação no GitHub Pages
 
 1. Faça merge desta branch na `main` (o `index.html` fica na raiz).
 2. Em **Settings → Pages**, mantenha *Source: Deploy from a branch*, branch `main`, pasta `/ (root)`.
-3. O `CNAME` já aponta para `confrontodiaristas.com`; após o deploy o painel fica disponível nesse domínio.
+3. O painel fica disponível na URL do Pages. Para usar um domínio próprio, adicione um arquivo `CNAME` na raiz com o domínio desejado (ele foi removido do repositório).
 
 Como é 100% estático e sem dependências de servidor, também funciona abrindo o `index.html` diretamente no navegador.
 
