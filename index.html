@@ -253,8 +253,9 @@ header.top{position:relative}
         <div class="mode" id="modeA">
           <button data-m="paste" class="active">Colar texto</button>
           <button data-m="file">Arquivo</button>
+          <button data-m="plataforma">Plataforma</button>
         </div>
-        <div class="sub">Cole os "📊 Resumo do dia — dd/mm" (vários dias de uma vez) ou envie uma base TXT/CSV/XLS/XLSX.</div>
+        <div class="sub">Cole o resumo do dia, envie uma base TXT/CSV/XLS/XLSX, ou envie o <b>código-fonte da plataforma</b> de planejamento — o app detecta o resumo planejado automaticamente.</div>
       </div>
       <div class="panel-body">
         <div data-view="a-paste">
@@ -267,6 +268,18 @@ header.top{position:relative}
             <strong id="fileLabelA">📁 Enviar arquivo da Fonte A</strong>
             <div class="fsub" id="fileSubA">XLSX/XLS/CSV/TXT — clique ou arraste</div>
           </label>
+        </div>
+        <div data-view="a-plataforma" style="display:none">
+          <label class="filebox" id="fileboxPlat">
+            <input type="file" id="filePlat" accept=".html,.htm,.txt">
+            <strong id="fileLabelPlat">📁 Enviar código-fonte da plataforma (.html)</strong>
+            <div class="fsub">O app localiza o bloco de dados do plano e recalcula o resumo planejado (volume, HC, %ABS, MELI e ID) por filial e dia</div>
+          </label>
+          <div class="parse-ok" id="parseInfoPlat"></div>
+          <details class="adv" style="margin-top:6px"><summary>Ou colar o código-fonte</summary>
+            <textarea id="textPlat" style="min-height:120px;margin-top:8px" placeholder="Cole aqui o HTML da página do Plano Diário (Ctrl+U → Ctrl+A → Ctrl+C)…"></textarea>
+          </details>
+          <div class="hint">Os <b>apontamentos manuais</b> feitos na plataforma ficam no banco de dados dela — o código-fonte traz os <b>valores base</b> do plano. Para dias sem valor base, use "Colar texto".</div>
         </div>
         <div class="hint">Cabeçalhos consecutivos (ex.: 02/07 e 03/07 seguidos) são resolvidos por <b>fila de cabeçalhos</b>: cada bloco fecha na linha <b>TOTAL</b>.</div>
       </div>
@@ -471,6 +484,7 @@ const COL_ALIASES = {
 /* =========================================================================
    STATE
    ========================================================================= */
+let platformSrcA = null; // resumo derivado do código-fonte da plataforma
 let fileSrcA = null;   // {kind, records|blocks..., audit, mapping, fileName}
 let fileSrcB = null;
 let mapOverrides = {}; // "origem|aba" -> {filialKey, operacao}
@@ -672,6 +686,102 @@ function resumoToCells(parsed){
     });
   });
   return {cells:[...map.values()], conflicts, identicalDups, orphanBlocks, dayMeta, headers:parsed.headers, emptyHeaders:parsed.emptyHeaders};
+}
+
+/* ================= PARSER: CÓDIGO-FONTE DA PLATAFORMA (Plano Diário) ================= */
+// Localiza o bloco `const DATA = { ... };` e devolve o JSON como string.
+function extractPlatformDATA(text){
+  const idx = text.indexOf('const DATA');
+  if(idx<0) return null;
+  const eq = text.indexOf('=', idx);
+  if(eq<0) return null;
+  let i = text.indexOf('{', eq);
+  if(i<0) return null;
+  let depth=0, inStr=false, strCh='', esc=false;
+  for(let j=i;j<text.length;j++){
+    const c=text[j];
+    if(inStr){ if(esc) esc=false; else if(c==='\\') esc=true; else if(c===strCh) inStr=false; continue; }
+    if(c==='"'||c==="'"){ inStr=true; strCh=c; continue; }
+    if(c==='{') depth++;
+    else if(c==='}'){ depth--; if(depth===0) return text.slice(i, j+1); }
+  }
+  return null;
+}
+// Replica a matemática do Plano Diário para um hub/dia (sem apontamentos manuais).
+// Retorna {volume, hcSOP, hcNec, meli, id, abs} — mesmas fórmulas de computeDay/ResumosView.
+function computePlatformHubDay(hub, planKey, iso){
+  const inp = hub.inputs||{};
+  const g = name => { const s=inp[name]; if(!s) return null; const v=s[iso]; return (v===null||v===undefined)?null:Number(v); };
+  const rHC = v => (v==null||isNaN(v))?null:Math.round(v);
+  const sum = (...vs)=>{ const p=vs.filter(v=>v!=null&&!isNaN(v)); return p.length?p.reduce((s,v)=>s+Number(v),0):null; };
+  const dif = (a,b)=> Number(a==null?0:a)-Number(b==null?0:b);
+  const mean= (...vs)=>{ const p=vs.filter(v=>v!=null&&!isNaN(v)); return p.length?p.reduce((s,v)=>s+Number(v),0)/p.length:null; };
+  const div = (a,b)=> (a==null||b==null||Number(b)===0)?null:Number(a)/Number(b);
+  const type = hub.type || (planKey==='xd'?'xd':'single');
+  if(type==='xd'){
+    const quadro=g('Quadro Solicitado MELI'), volume=g('Volume previsto Hub');
+    const prod=hub.prod;
+    const nec = prod? rHC(div(volume, prod)) : null;
+    const contr=g('HC contratado'), abs=g('ABS %');
+    const necID = rHC(sum(dif(quadro,contr), (contr!=null&&abs!=null)?Number(contr)*Number(abs):0));
+    const necMeli = (nec!=null&&quadro!=null)? rHC(dif(nec,quadro)) : null;
+    return {volume, hcSOP:quadro, hcNec:nec, meli:necMeli, id:necID, abs};
+  }
+  const am=g('AM'), pm=g('PM');
+  const volume=sum(am,pm);
+  const necAM = hub.prodAM? rHC(div(am,hub.prodAM)) : null;
+  const necPM = hub.prodPM? rHC(div(pm,hub.prodPM)) : null;
+  const necTotal = rHC(sum(necAM,necPM));
+  const contrAM=g('HC Contratado AM'), contrPM=g('HC Contratado PM');
+  const absAM=g('%ABS D-1 AM'), absPM=g('%ABS D-1 PM');
+  // single: PM não se aplica (quadroPM=0); split: usa AM/PM próprios.
+  const quadroAM = type==='split' ? g('Quadro Solicitado MELI AM') : g('Quadro Solicitado MELI');
+  const quadroPM = type==='split' ? g('Quadro Solicitado MELI PM') : 0;
+  const meliAM = (necAM!=null&&quadroAM!=null)? rHC(dif(necAM,quadroAM)) : null;
+  const idAM   = rHC(dif(sum(dif(quadroAM,contrAM), (contrAM!=null&&absAM!=null)?Number(contrAM)*Number(absAM):0), 0));
+  const meliPM = (necPM!=null&&quadroPM!=null)? rHC(dif(necPM,quadroPM)) : null;
+  const idPM   = rHC(dif(sum(dif(quadroPM,contrPM), (contrPM!=null&&absPM!=null)?Number(contrPM)*Number(absPM):0), 0));
+  return {volume, hcSOP:sum(quadroAM,quadroPM), hcNec:necTotal, meli:sum(meliAM,meliPM), id:sum(idAM,idPM), abs:mean(absAM,absPM)};
+}
+function parsePlataforma(text, defYear){
+  const jsonStr = extractPlatformDATA(text);
+  if(!jsonStr) throw new Error('Não encontrei o bloco "const DATA = {…}" no código-fonte. Confira se colou o HTML completo da página do Plano Diário.');
+  let DATA; try{ DATA = JSON.parse(jsonStr); }catch(e){ throw new Error('Bloco de dados do plano inválido: '+e.message); }
+  const planos = Object.entries(DATA).filter(([,p])=>p && Array.isArray(p.hubs));
+  if(!planos.length) throw new Error('O bloco de dados não contém planos/hubs reconhecíveis.');
+  const cells=[]; const dayMeta=new Map(); const headSet=new Set();
+  const opFromName = n => /full/i.test(n)?'Full' : /\bsd\b/i.test(n)?'SD' : /\bxd\b/i.test(n)?'XD' : null;
+  planos.forEach(([planKey, plan])=>{
+    (plan.hubs||[]).forEach(hub=>{
+      const filialKey = detectBranch(hub.name) || hub.name;
+      const operacao = planKey==='xd' ? (opFromName(hub.name)||'XD') : (opFromName(hub.name)||'SVC');
+      (plan.dates||[]).forEach(iso=>{
+        const r = computePlatformHubDay(hub, planKey, iso);
+        const meli = Math.max(0, Math.round(Number(r.meli)||0));
+        const id   = Math.max(0, Math.round(Number(r.id)||0));
+        const vol  = r.volume==null?null:Math.round(Number(r.volume));
+        const emit = (vol!=null && vol>0) || meli>0 || id>0;
+        if(!emit) return;
+        const meta = {
+          vol,
+          hcSop: r.hcSOP==null?null:Math.round(Number(r.hcSOP)),
+          hcProd: r.hcNec==null?null:Math.round(Number(r.hcNec)),
+          abs: r.abs==null?null:(Number(r.abs)*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%',
+        };
+        cells.push({data:iso, operacao, filialKey, solicitante:'MELI', count:meli, meta});
+        cells.push({data:iso, operacao, filialKey, solicitante:'ID', count:id, meta});
+        headSet.add(iso);
+        const dm = dayMeta.get(iso) || {iso, scope:operacao, blocks:0, totals:[]};
+        dm.blocks = 1; dayMeta.set(iso, dm);
+      });
+    });
+  });
+  if(!cells.length) throw new Error('Nenhum dia com plano preenchido foi encontrado no código-fonte (os apontamentos manuais ficam no banco da plataforma, não no HTML).');
+  const headers = [...headSet].sort().map(iso=>({iso, key:fmtBR(iso)}));
+  return {kind:'resumo', origem:'Fonte A', fileName:'(código-fonte da plataforma)',
+    cells,
+    resumo:{cells, conflicts:[], identicalDups:[], orphanBlocks:[], emptyHeaders:[], headers, dayMeta},
+    mapping:[]};
 }
 
 /* =========================================================================
@@ -935,13 +1045,41 @@ function bindFile(boxId, inputId, labelId, subId, origem, onLoaded){
 bindFile('fileboxA','fileA','fileLabelA','fileSubA','Fonte A', s=>fileSrcA=s);
 bindFile('fileboxB','fileB','fileLabelB','fileSubB','Fonte B', s=>fileSrcB=s);
 
+/* ── Fonte A: código-fonte da plataforma ── */
+function tryParsePlatform(text, fname){
+  const el=$('parseInfoPlat');
+  try{
+    const src=parsePlataforma(text, +$('anoPad').value||2026);
+    platformSrcA=src;
+    $('fileboxPlat').classList.add('loaded');
+    if(fname) $('fileLabelPlat').textContent='✅ '+fname;
+    const isos=[...new Set(src.cells.map(c=>c.data))].sort();
+    const ops=[...new Set(src.cells.map(c=>c.operacao))];
+    const fils=[...new Set(src.cells.map(c=>c.filialKey))];
+    el.style.display='block'; el.style.color='var(--ok)';
+    el.textContent=`✓ ${isos.length} dia(s) · ${fils.length} filial(is) · operações: ${ops.join(', ')} · ${fmtBR(isos[0])} a ${fmtBR(isos[isos.length-1])}`;
+    autoRange(); markSteps();
+  }catch(err){ platformSrcA=null; $('fileboxPlat').classList.remove('loaded'); el.style.display='block'; el.style.color='var(--bad)'; el.textContent='⚠️ '+err.message; markSteps(); }
+}
+(function bindPlatform(){
+  const box=$('fileboxPlat');
+  const read=file=>{ const rd=new FileReader(); rd.onload=ev=>tryParsePlatform(String(ev.target.result), file.name); rd.readAsText(file,'UTF-8'); };
+  $('filePlat').addEventListener('change',e=>{ if(e.target.files[0]) read(e.target.files[0]); });
+  ['dragover','dragenter'].forEach(ev=>box.addEventListener(ev,e=>{e.preventDefault();box.classList.add('drag')}));
+  ['dragleave','drop'].forEach(ev=>box.addEventListener(ev,e=>{e.preventDefault();box.classList.remove('drag')}));
+  box.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)read(f);});
+  $('textPlat').addEventListener('input',()=>{ const t=$('textPlat').value.trim(); if(t) tryParsePlatform(t); else { platformSrcA=null; $('parseInfoPlat').style.display='none'; markSteps(); } });
+})();
+
 $('siteSelB').innerHTML = BRANCHES.map(b=>`<option value="${b.key}">${escapeHtml(b.label)}</option>`).join('');
 $('opSelB').innerHTML = OPERACOES.map(o=>`<option>${o}</option>`).join('');
 
 /* getSourceA / getSourceB unificados */
 function getSourceA(){
   const defYear=+$('anoPad').value||2026;
-  if(activeMode($('modeA'))==='file'){ if(!fileSrcA) return null; return {...fileSrcA, origem:'Fonte A'}; }
+  const m = activeMode($('modeA'));
+  if(m==='plataforma'){ return platformSrcA || null; }
+  if(m==='file'){ if(!fileSrcA) return null; return {...fileSrcA, origem:'Fonte A'}; }
   const t=$('textA').value.trim(); if(!t) return null;
   if(/Resumo do dia/i.test(t) || /Diaristas[^\n]*MELI\s*:/i.test(t)){
     const parsed = parseResumoMulti(t, defYear);
