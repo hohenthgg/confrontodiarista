@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confronto de Diaristas — Período · Fonte A × Fonte B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0d1117; --bg-2:#11161f; --card:#161d29; --card-2:#1b2433;
+  --line:#28324a; --line-soft:#202a3d;
+  --ink:#e8ecf4; --ink-soft:#93a0b8; --ink-dim:#5d6a83;
+  --navy:#0f1729; --amber:#ffc93d; --amber-ink:#3d2f00;
+  --blue:#5b8def;
+  --ok:#3ecf8e; --ok-bg:rgba(62,207,142,.12); --ok-line:rgba(62,207,142,.35);
+  --bad:#ff6b5e; --bad-bg:rgba(255,107,94,.12); --bad-line:rgba(255,107,94,.35);
+  --warn:#ffb54d; --warn-bg:rgba(255,181,77,.12);
+  --mono:'JetBrains Mono',monospace; --disp:'Archivo',sans-serif; --body:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:100vh}
+header{background:var(--navy);padding:26px 28px 22px;border-bottom:1px solid var(--line)}
+header h1{font-family:var(--disp);font-weight:800;font-size:clamp(20px,3.4vw,30px);letter-spacing:.3px;text-transform:uppercase}
+header h1 span{color:var(--amber)}
+header p{color:var(--ink-soft);font-size:13.5px;margin-top:6px;max-width:860px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding:26px 20px 70px}
+.grid-inputs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:860px){.grid-inputs{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.panel-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-soft);background:var(--card-2);flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.6px}
+.tag-a{background:var(--amber);color:var(--amber-ink)}
+.tag-b{background:var(--blue);color:#0a1226}
+.panel-head h2{font-family:var(--disp);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.panel-head .sub{font-size:11px;color:var(--ink-dim);width:100%;margin-top:2px}
+.mode{margin-left:auto;display:flex;background:var(--bg-2);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.mode button{border:none;background:transparent;color:var(--ink-soft);font-family:var(--body);font-size:11.5px;font-weight:600;padding:6px 12px;cursor:pointer}
+.mode button.active{background:var(--amber);color:var(--amber-ink)}
+.panel-b .mode button.active{background:var(--blue);color:#0a1226}
+.panel-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+textarea{width:100%;min-height:200px;resize:vertical;border:1px solid var(--line);border-radius:8px;
+  padding:11px 12px;font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--ink);background:var(--bg-2)}
+textarea::placeholder{color:var(--ink-dim)}
+textarea:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:transparent}
+.panel-b textarea:focus{outline-color:var(--blue)}
+.hint{font-size:12px;color:var(--ink-soft);line-height:1.5}
+.hint b{color:var(--ink)}
+.parse-ok{font-size:12px;color:var(--ok);display:none}
+.filebox{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;min-height:120px;border:1.5px dashed var(--line);border-radius:8px;padding:18px 16px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg-2)}
+[data-view]{display:flex;flex-direction:column}
+.filebox strong,.filebox .fsub{pointer-events:none}
+.filebox:hover,.filebox.drag{border-color:var(--amber);background:#1c1f14}
+.panel-b .filebox:hover,.panel-b .filebox.drag{border-color:var(--blue);background:#131c30}
+.filebox strong{font-size:13.5px}
+.filebox .fsub{font-size:12px;color:var(--ink-soft);margin-top:4px}
+.filebox.loaded{border-color:var(--ok);background:var(--ok-bg)}
+input[type=file]{display:none}
+.inline-ctrl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft)}
+select{border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-family:var(--body);font-size:13px;background:var(--bg-2);color:var(--ink);min-width:150px}
+.controls{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+  display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:5px}
+.ctrl label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft)}
+button.go{margin-left:auto;background:var(--amber);color:var(--amber-ink);border:none;border-radius:8px;
+  font-family:var(--disp);font-weight:800;font-size:14.5px;letter-spacing:.5px;text-transform:uppercase;
+  padding:12px 26px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:8px}
+button.go:hover{filter:brightness(1.08);transform:translateY(-1px)}
+button.go::before{content:"⇄";font-size:17px}
+button.csv{background:var(--bg-2);color:var(--ink-soft);border:1px solid var(--line);border-radius:8px;
+  font-family:var(--body);font-weight:600;font-size:12.5px;padding:10px 16px;cursor:pointer}
+button.csv:hover{color:var(--ink);border-color:var(--ink-dim)}
+.err{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line);border-radius:8px;padding:10px 13px;font-size:13px;margin-top:14px;display:none}
+#dash{display:none;margin-top:30px}
+.dash-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.dash-title h2{font-family:var(--disp);font-size:22px;font-weight:800;text-transform:uppercase}
+.dash-title .meta{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 15px;border-top:4px solid var(--line)}
+.kpi.k-ok{border-top-color:var(--ok)} .kpi.k-bad{border-top-color:var(--bad)}
+.kpi.k-amber{border-top-color:var(--amber)} .kpi.k-blue{border-top-color:var(--blue)}
+.kpi.k-warn{border-top-color:var(--warn)}
+.kpi .n{font-family:var(--disp);font-size:26px;font-weight:800;line-height:1;white-space:nowrap}
+.kpi .n .sep{font-size:14px;color:var(--ink-dim)}
+.kpi .l{font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin-top:6px;line-height:1.4}
+.section-h{font-family:var(--disp);font-size:13.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--ink-soft);margin:26px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section-h::after{content:"";flex:1;height:1px;background:var(--line)}
+.view-toggle{display:flex;background:var(--bg-2);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.view-toggle button{border:none;background:transparent;color:var(--ink-soft);font-family:var(--body);font-size:11.5px;font-weight:600;padding:5px 12px;cursor:pointer;text-transform:none;letter-spacing:0}
+.view-toggle button.active{background:var(--amber);color:var(--amber-ink)}
+.tbl-wrap{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-soft);
+  text-align:center;padding:10px 10px;border-bottom:2px solid var(--line);background:var(--card-2);white-space:nowrap}
+th:first-child{text-align:left}
+th.grp-meli{border-bottom-color:var(--amber)} th.grp-id{border-bottom-color:var(--blue)}
+td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;text-align:center}
+tr:last-child td{border-bottom:none}
+td.site,td.day{font-weight:600;white-space:nowrap;text-align:left}
+td.day .wd{color:var(--ink-dim);font-weight:400;font-size:11.5px}
+td.num{font-family:var(--mono);font-weight:700}
+td.cell{font-family:var(--mono);font-size:12px;font-weight:700;white-space:nowrap}
+td.cell .arr{color:var(--ink-dim);font-weight:400}
+td.c-ok{background:var(--ok-bg);color:var(--ok)}
+td.c-exc{background:var(--bad-bg);color:var(--bad)}
+td.c-fal{background:var(--warn-bg);color:var(--warn)}
+td.c-nil{color:var(--ink-dim)}
+tr.tot td{background:var(--card-2);border-top:2px solid var(--line);font-weight:700}
+.delta{font-family:var(--mono);font-weight:700;font-size:12px;padding:2px 8px;border-radius:5px;display:inline-block}
+.d0{background:var(--ok-bg);color:var(--ok)}
+.dpos{background:var(--bad-bg);color:var(--bad)}
+.dneg{background:var(--warn-bg);color:var(--warn)}
+.status{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.s-ok{background:var(--ok-bg);color:var(--ok)} .s-bad{background:var(--bad-bg);color:var(--bad)} .s-warn{background:var(--warn-bg);color:var(--warn)}
+.s-dim{background:var(--bg-2);color:var(--ink-dim)}
+tr.expandable{cursor:pointer} tr.expandable:hover td{background:var(--card-2)}
+tr.expandable:hover td.c-ok{background:var(--ok-bg)} tr.expandable:hover td.c-exc{background:var(--bad-bg)} tr.expandable:hover td.c-fal{background:var(--warn-bg)}
+tr.detail>td{background:var(--bg-2);padding:14px 16px;text-align:left}
+.mini-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:10px}
+.mini-tbl th{font-size:10px;padding:7px 9px;background:transparent;border-bottom:1px solid var(--line)}
+.mini-tbl td{padding:7px 9px;border-bottom:1px solid var(--line-soft)}
+details.names-det{margin-top:6px}
+details.names-det summary{cursor:pointer;font-size:12px;color:var(--blue);font-weight:600}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12.5px;margin-top:10px}
+@media(max-width:700px){.names{grid-template-columns:1fr}}
+.names h4{font-family:var(--mono);font-size:11px;letter-spacing:.6px;margin-bottom:6px}
+.names h4.h-meli{color:var(--amber)} .names h4.h-id{color:var(--blue)} .names h4.h-out{color:var(--warn)}
+.names ol{padding-left:20px;color:var(--ink-soft);line-height:1.7}
+.names .dup{color:var(--bad);font-weight:600}
+.names .noid{color:var(--warn);font-weight:600}
+.insight{background:var(--card);border:1px solid var(--line-soft);border-left:4px solid var(--line);border-radius:8px;padding:12px 15px;margin-bottom:9px;font-size:13.5px;line-height:1.55;color:var(--ink)}
+.insight b{font-weight:700}
+.i-bad{border-left-color:var(--bad)} .i-warn{border-left-color:var(--warn)} .i-ok{border-left-color:var(--ok)} .i-info{border-left-color:var(--blue)}
+.i-cost{border-left-color:var(--bad);background:linear-gradient(90deg,var(--bad-bg),var(--card) 55%)}
+.insight .pill{font-family:var(--mono);font-size:11px;background:var(--bg-2);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.cost-badge{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--bad);color:#2b0703;border-radius:4px;padding:2px 6px;margin-right:6px;letter-spacing:.5px}
+footer{text-align:center;font-size:11.5px;color:var(--ink-dim);padding:20px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Confronto de Diaristas <span>—</span> Período · Fonte A × Fonte B</h1>
+  <p>Cole na <b style="color:var(--amber)">Fonte A</b> os resumos do dia (WhatsApp) de <b>vários dias de uma vez</b> — o app extrai e compila as informações <b>por filial, dia a dia</b> (volume, HC, %ABS, diaristas MELI e ID). Na <b style="color:var(--blue)">Fonte B</b>, envie a planilha de solicitações (cada aba = uma filial). O painel confronta <b>quantos diaristas MELI e ID</b> cada fonte registra em cada dia e filial, aponta excedentes (custo adicional), faltas, GROOT ID duplicado e outras irregularidades.</p>
+</header>
+
+<div class="wrap">
+  <div class="grid-inputs">
+    <!-- FONTE A -->
+    <div class="panel panel-a">
+      <div class="panel-head">
+        <span class="tag tag-a">FONTE A</span><h2>Resumos do dia (previsto)</h2>
+        <div class="mode" id="modeA">
+          <button data-m="paste" class="active">Colar texto</button>
+          <button data-m="file">Planilha (.xlsx)</button>
+        </div>
+        <div class="sub">Cole o texto com um ou vários "📊 Resumo do dia — dd/mm" — o período é detectado automaticamente.</div>
+      </div>
+      <div class="panel-body">
+        <div data-view="a-paste">
+          <textarea id="textA" placeholder="📊 *Resumo do dia — 01/07 qua (SVC)*&#10;&#10;*SMG3 - Pouso Alegre*&#10;Volume previsto: 38.000&#10;HC (base S&OP): 88&#10;HC (produtividade × volume): 123&#10;%ABS considerado: 0%&#10;Diaristas → MELI: 35 · ID: 0&#10;...&#10;*TOTAL diaristas → MELI: 38  ·  ID: 119*&#10;&#10;📊 *Resumo do dia — 02/07 qui (SVC)*&#10;... (cole quantos dias quiser)"></textarea>
+          <div class="parse-ok" id="parseInfoA"></div>
+        </div>
+        <div data-view="a-file" style="display:none">
+          <label class="filebox" id="fileboxA">
+            <input type="file" id="fileA" accept=".xlsx,.xlsm,.xls">
+            <strong id="fileLabelA">📁 Enviar planilha da Fonte A</strong>
+            <div class="fsub" id="fileSubA">Clique ou arraste — cada aba é lida como uma filial</div>
+          </label>
+        </div>
+        <div class="hint">Dias repetidos no texto são detectados: vale a <b>última versão</b> colada e o painel avisa.</div>
+      </div>
+    </div>
+
+    <!-- FONTE B -->
+    <div class="panel panel-b">
+      <div class="panel-head">
+        <span class="tag tag-b">FONTE B</span><h2>Base efetiva (solicitações)</h2>
+        <div class="mode" id="modeB">
+          <button data-m="file" class="active">Planilha (.xlsx)</button>
+          <button data-m="paste">Colar texto</button>
+        </div>
+        <div class="sub">Modelo: abas Pouso SVC, Pouso XD, Poços, Varginha, Divinópolis, Patos… colunas DATA · SOLICITANTE · EMPRESA · GROOT ID · NOME · CARGO · ESCALA.</div>
+      </div>
+      <div class="panel-body">
+        <div data-view="b-file">
+          <label class="filebox" id="fileboxB">
+            <input type="file" id="fileB" accept=".xlsx,.xlsm,.xls">
+            <strong id="fileLabelB">📁 Enviar planilha da Fonte B</strong>
+            <div class="fsub" id="fileSubB">Clique ou arraste — cada aba é lida como uma filial</div>
+          </label>
+        </div>
+        <div data-view="b-paste" style="display:none">
+          <textarea id="textB" style="min-height:150px" placeholder='"MÊS SOLICITAÇÃO"  "DATA SOLICITAÇÃO"  SOLICITANTE  EMPRESA DIARISTA  GROOT ID  NOME  CARGO  ESCALA  julho-26  16/07/2026  MELI  MOURA  {2220811}  Allison Batista...'></textarea>
+          <div class="inline-ctrl" style="margin-top:8px">
+            <span>Texto colado pertence à filial:</span>
+            <select id="siteSelB"></select>
+          </div>
+        </div>
+        <div class="hint">O app remove as chaves dos <b>{GROOT ID}</b>, ignora meses fora do período da Fonte A e casa as datas por <b>dia/mês</b>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl">
+      <label for="escalaSel">Filtro de escala (Fonte B)</label>
+      <select id="escalaSel"><option value="">Todas as escalas</option></select>
+    </div>
+    <button class="go" id="btnGo">Confrontar período</button>
+  </div>
+  <div class="err" id="errBox"></div>
+
+  <!-- DASHBOARD -->
+  <div id="dash">
+    <div class="dash-title">
+      <h2>Painel do confronto — período</h2>
+      <span class="meta" id="dashMeta"></span>
+      <button class="csv" id="btnCsv" style="margin-left:auto">⬇ Exportar CSV</button>
+    </div>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="section-h">Confronto dia a dia × filial
+      <div class="view-toggle" id="viewToggle">
+        <button data-v="meli" class="active">MELI</button>
+        <button data-v="id">ID Logistics</button>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table id="matrixTbl"><thead id="matrixHead"></thead><tbody id="matrixBody"></tbody></table></div>
+    <div class="hint" style="margin-top:8px">Cada célula mostra <b>Fonte A → Fonte B</b>.
+      <span class="delta d0">verde</span> bate ·
+      <span class="delta dpos">vermelho</span> Fonte B acima do previsto (custo adicional) ·
+      <span class="delta dneg">laranja</span> Fonte B abaixo do previsto ·
+      "—" sem dado. Clique no dia para abrir o detalhe completo (volume, HC, %ABS e nomes).</div>
+
+    <div class="section-h">Consolidado do período por filial</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Filial</th>
+            <th class="grp-meli">MELI · A</th><th class="grp-meli">MELI · B</th><th class="grp-meli">Δ MELI</th>
+            <th class="grp-id">ID · A</th><th class="grp-id">ID · B</th><th class="grp-id">Δ ID</th>
+            <th>Dias batendo</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="consBody"></tbody>
+      </table>
+    </div>
+
+    <div class="section-h">Alertas de custo adicional</div>
+    <div id="costAlerts"></div>
+
+    <div class="section-h">Irregularidades &amp; insights</div>
+    <div id="insights"></div>
+  </div>
+</div>
+<footer>uso interno · roda 100% no navegador · nenhum dado sai da sua máquina</footer>
+
+<script>
+/* ================= CONFIG ================= */
+const SITES = [
+  {key:'SMG3',    label:'SMG3 - Pouso Alegre'},
+  {key:'SMG3-XD', label:'Pouso Alegre (XD)', extra:true},
+  {key:'SMG5',    label:'SMG5 - Poços de Caldas'},
+  {key:'SMG9',    label:'SMG9 - Varginha'},
+  {key:'SMG10',   label:'SMG10 - Divinópolis'},
+  {key:'SMG11',   label:'SMG11 - Patos de Minas'},
+];
+const MONTHS = 'janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro';
+const MONTH_RE = new RegExp('^(?:'+MONTHS+')-\\d{2}$','i');
+const DATE_RE  = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
+const MES_NOME = ['','janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+let fileRecsA = null;
+let fileRecsB = null;
+let lastResult = null; // p/ export CSV e re-render do toggle
+
+/* ================= HELPERS ================= */
+const $ = s => document.getElementById(s);
+function pad(n){return String(n).padStart(2,'0')}
+function serialToDate(n){
+  const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+  return {dd:d.getUTCDate(), mm:d.getUTCMonth()+1, yy:d.getUTCFullYear()};
+}
+function normSolic(s){
+  s = (s||'').trim().toLowerCase();
+  if(!s) return 'VAZIO';
+  if(s.includes('meli')) return 'MELI';
+  if(s.includes('id')||s.includes('log')) return 'ID';
+  return 'OUTRO';
+}
+function cleanId(v){ return String(v||'').replace(/[{}\s]/g,''); }
+function cleanNome(v){ return String(v||'').replace(/^\d+\.\s*/,'').trim(); }
+function filialFromSheet(name){
+  const n = name.toLowerCase();
+  if(/pouso/.test(n)) return /xd/.test(n) ? 'SMG3-XD' : 'SMG3';
+  if(/po[cç]os/.test(n)) return 'SMG5';
+  if(/varginha/.test(n)) return 'SMG9';
+  if(/div/.test(n)) return 'SMG10';
+  if(/patos/.test(n)) return 'SMG11';
+  return name.trim(); // aba não mapeada vira sua própria filial
+}
+function filialLabel(key){
+  const s = SITES.find(x=>x.key===key);
+  return s ? s.label : key;
+}
+function parseNum(s){
+  s = String(s==null?'':s).replace(/\*/g,'').trim();
+  if(!s || /^[—–-]+$/.test(s)) return null;
+  const n = parseInt(s.replace(/\./g,'').split(',')[0],10);
+  return isNaN(n) ? null : n;
+}
+function fmtNum(n){ return n==null ? '—' : n.toLocaleString('pt-BR'); }
+function dkSort(a,b){
+  const [da,ma]=a.split('/').map(Number), [db,mb]=b.split('/').map(Number);
+  return (ma-mb) || (da-db);
+}
+
+/* ================= PARSER: RESUMOS (multi-dia) ================= */
+function parseResumoMulti(text){
+  const days = new Map(); // 'dd/mm' -> day obj
+  let cur = null, curSite = null;
+  for(let raw of text.split(/\r?\n/)){
+    const ln = raw.trim();
+    if(!ln) continue;
+    let m = ln.match(/Resumo do dia\s*[—–-]\s*(\d{1,2})\/(\d{1,2})(?:\s+([a-záéíóúãõç]{3}))?/i);
+    if(m){
+      const key = pad(m[1])+'/'+pad(m[2]);
+      const mScope = ln.match(/\(([A-Za-z]{2,6})\)/);
+      if(days.has(key)){
+        cur = days.get(key); cur.blocks++;
+      } else {
+        cur = {key, dd:+m[1], mm:+m[2], wd:(m[3]||'').toLowerCase(), scope:mScope?mScope[1].toUpperCase():null,
+               sites:{}, total:null, blocks:1, totalCount:0, overwrites:0};
+        days.set(key, cur);
+      }
+      curSite = null; continue;
+    }
+    if(!cur) continue;
+    m = ln.match(/TOTAL[^0-9]*MELI[^0-9]*?(\d+)[^0-9]+ID[^0-9]*?(\d+)/i);
+    if(m){ if(cur.total) cur.totalCount++; cur.total = {meli:+m[1], id:+m[2]}; curSite = null; continue; }
+    m = ln.match(/^\*?\s*(SMG\d+)\s*-\s*([^*]+?)\s*\*?$/i);
+    if(m && !/total/i.test(ln)){
+      curSite = m[1].toUpperCase();
+      if(!cur.sites[curSite]) cur.sites[curSite] = {label:m[2].trim(), vol:null, hcSop:null, hcProd:null, abs:null, meli:null, id:null};
+      continue;
+    }
+    if(!curSite) continue;
+    const st = cur.sites[curSite];
+    m = ln.match(/Volume previsto\s*:\s*(.+)$/i);          if(m){ st.vol = parseNum(m[1]); continue; }
+    m = ln.match(/HC\s*\(base[^)]*\)\s*:\s*(.+)$/i);       if(m){ st.hcSop = parseNum(m[1]); continue; }
+    m = ln.match(/HC\s*\(produtividade[^)]*\)\s*:\s*(.+)$/i); if(m){ st.hcProd = parseNum(m[1]); continue; }
+    m = ln.match(/%?\s*ABS considerado\s*:\s*(.+)$/i);     if(m){ st.abs = m[1].replace(/\*/g,'').trim(); continue; }
+    m = ln.match(/Diaristas[^0-9—–-]*MELI\s*:?\s*(\d+)[^0-9]+ID\s*:?\s*(\d+)/i);
+    if(m){ if(st.meli!=null) cur.overwrites++; st.meli = +m[1]; st.id = +m[2]; continue; }
+  }
+  return days;
+}
+function isResumoText(t){ return /Resumo do dia/i.test(t) || /Diaristas\s*(→|->|—)?\s*MELI\s*:/i.test(t); }
+
+/* ================= PARSER: TEXTO DE BASE ================= */
+function parseBaseText(raw, filialKey){
+  let cells = [];
+  raw.replace(/\r/g,'').split(/[\t\n]+/).forEach(c=>{
+    c = c.trim(); if(!c) return;
+    const m = c.match(new RegExp('^(.*\\S)\\s+((?:'+MONTHS+')-\\d{2})$','i'));
+    if(m && !MONTH_RE.test(c)){ cells.push(m[1]); cells.push(m[2]); }
+    else cells.push(c);
+  });
+  const recs = [];
+  for(let i=0;i<cells.length;i++){
+    if(!DATE_RE.test(cells[i])) continue;
+    const p = cells[i].split('/').map(Number);
+    const f = [];
+    for(let j=i+1; j<cells.length && f.length<6; j++){
+      if(DATE_RE.test(cells[j]) || MONTH_RE.test(cells[j])) break;
+      f.push(cells[j]);
+    }
+    if(f.length>=4){
+      recs.push({filial:filialKey, dd:p[0], mm:p[1], yy:p[2], dkey:pad(p[0])+'/'+pad(p[1]),
+        solic:normSolic(f[0]), empresa:f[1]||'', id:cleanId(f[2]),
+        nome:cleanNome(f[3]), cargo:f[4]||'', escala:(f[5]||'').trim(), origem:'texto'});
+    }
+  }
+  return recs;
+}
+
+/* ================= PARSER: XLSX (aba = filial) ================= */
+function parseWorkbook(wb, tagOrigem){
+  const recs = [];
+  wb.SheetNames.forEach(sn=>{
+    const filial = filialFromSheet(sn);
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, raw:true, defval:''});
+    if(!rows.length) return;
+    let hi = rows.findIndex(r => r.some(c => /groot/i.test(String(c))) );
+    if(hi<0) hi = 0;
+    const head = rows[hi].map(c=>String(c).toLowerCase().replace(/\n/g,' '));
+    const col = re => head.findIndex(h=>re.test(h));
+    const cData=col(/^data/), cSolic=col(/solicitante/), cEmp=col(/empresa/),
+          cId=col(/groot/), cNome=col(/nome/), cCargo=col(/cargo/), cEsc=col(/escala/);
+    for(let r=hi+1;r<rows.length;r++){
+      const row = rows[r]; if(!row || !row.length) continue;
+      let dv = row[cData]; if(dv===''||dv==null) continue;
+      let d;
+      if(typeof dv==='number') d = serialToDate(dv);
+      else if(dv instanceof Date) d = {dd:dv.getDate(), mm:dv.getMonth()+1, yy:dv.getFullYear()};
+      else { const m=String(dv).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(!m) continue; d = {dd:+m[1], mm:+m[2], yy:+m[3]}; }
+      const nome = cleanNome(row[cNome]);
+      if(!nome) continue;
+      recs.push({filial, dd:d.dd, mm:d.mm, yy:d.yy, dkey:pad(d.dd)+'/'+pad(d.mm),
+        solic:normSolic(String(row[cSolic]||'')), empresa:String(row[cEmp]||'').trim(),
+        id:cleanId(row[cId]), nome, cargo:String(row[cCargo]||'').trim(), escala:String(row[cEsc]||'').trim(),
+        origem:tagOrigem+':'+sn});
+    }
+  });
+  return recs;
+}
+
+/* ================= MODOS (colar × planilha) ================= */
+function setupMode(modeEl, prefix){
+  modeEl.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      modeEl.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      document.querySelectorAll(`[data-view^="${prefix}-"]`).forEach(v=>{
+        v.style.display = v.dataset.view === prefix+'-'+b.dataset.m ? '' : 'none';
+      });
+    });
+  });
+}
+setupMode($('modeA'),'a'); setupMode($('modeB'),'b');
+function activeMode(modeEl){ return modeEl.querySelector('button.active').dataset.m; }
+
+/* ================= UPLOADS ================= */
+function bindFile(boxId, inputId, labelId, subId, onLoaded){
+  const box = $(boxId);
+  $(inputId).addEventListener('change', e=>{ if(e.target.files[0]) read(e.target.files[0]); });
+  ['dragover','dragenter'].forEach(ev=>box.addEventListener(ev,e=>{e.preventDefault();box.classList.add('drag')}));
+  ['dragleave','drop'].forEach(ev=>box.addEventListener(ev,e=>{e.preventDefault();box.classList.remove('drag')}));
+  box.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) read(f); });
+  function read(file){
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      try{
+        const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+        const recs = parseWorkbook(wb, boxId==='fileboxA'?'A':'B');
+        box.classList.add('loaded');
+        $(labelId).textContent = '✅ ' + file.name;
+        const filiais = [...new Set(recs.map(r=>r.filial))];
+        $(subId).textContent = recs.length + ' registros · ' + filiais.length + ' filiais: ' + filiais.map(filialLabel).join(', ');
+        onLoaded(recs);
+        refreshEscalas();
+      }catch(err){ showErr('Não consegui ler a planilha: '+err.message); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+bindFile('fileboxA','fileA','fileLabelA','fileSubA', r=>fileRecsA=r);
+bindFile('fileboxB','fileB','fileLabelB','fileSubB', r=>fileRecsB=r);
+
+/* ================= FONTES ================= */
+function getSourceA(){
+  if(activeMode($('modeA'))==='file'){
+    if(!fileRecsA) return null;
+    return {type:'base', recs:fileRecsA};
+  }
+  const t = $('textA').value.trim();
+  if(!t) return null;
+  if(!isResumoText(t)) return {type:'invalid'};
+  return {type:'resumo', days:parseResumoMulti(t)};
+}
+function getSourceB(){
+  if(activeMode($('modeB'))==='file'){
+    if(!fileRecsB) return null;
+    return {recs:fileRecsB};
+  }
+  const t = $('textB').value.trim();
+  if(!t) return null;
+  return {recs:parseBaseText(t, $('siteSelB').value || 'SMG3')};
+}
+
+/* ================= SELETORES ================= */
+$('siteSelB').innerHTML = SITES.filter(s=>!s.extra).map(s=>`<option value="${s.key}">${s.label}</option>`).join('');
+
+function refreshEscalas(){
+  const B = getSourceB();
+  const recs = B ? B.recs : [];
+  const escs = [...new Set(recs.map(r=>r.escala).filter(Boolean))].sort();
+  const eSel = $('escalaSel'); const keep = eSel.value;
+  eSel.innerHTML = '<option value="">Todas as escalas</option>' + escs.map(e=>`<option>${e}</option>`).join('');
+  if([...eSel.options].some(o=>o.value===keep)) eSel.value = keep;
+}
+$('textB').addEventListener('input', refreshEscalas);
+$('textA').addEventListener('input', ()=>{
+  const A = getSourceA();
+  const el = $('parseInfoA');
+  if(A && A.type==='resumo' && A.days.size){
+    const keys = [...A.days.keys()].sort(dkSort);
+    el.style.display='block';
+    el.textContent = `✓ ${A.days.size} dia(s) detectado(s): ${keys[0]} a ${keys[keys.length-1]}`;
+  } else el.style.display='none';
+});
+
+/* ================= CONFRONTO ================= */
+function showErr(msg){ const e=$('errBox'); e.textContent='⚠️ '+msg; e.style.display='block'; }
+function hideErr(){ $('errBox').style.display='none'; }
+
+$('btnGo').addEventListener('click', ()=>{
+  hideErr();
+  const A = getSourceA();
+  if(!A) return showErr('Fonte A vazia. Cole os resumos do dia ou envie a planilha da Fonte A.');
+  if(A.type==='invalid') return showErr('Não reconheci o texto da Fonte A como resumo do dia. Confira linhas como "📊 Resumo do dia — 01/07 qua (SVC)" e "Diaristas → MELI: X · ID: Y".');
+  if(A.type==='resumo' && !A.days.size)
+    return showErr('Não encontrei nenhum "Resumo do dia — dd/mm" no texto da Fonte A.');
+  const B = getSourceB();
+  if(!B || !B.recs.length) return showErr('Fonte B vazia. Envie a planilha ou cole o texto da base efetiva.');
+  compute(A, B);
+});
+
+$('viewToggle').querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    $('viewToggle').querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    if(lastResult) renderMatrix(lastResult, b.dataset.v);
+  });
+});
+
+function compute(A, B){
+  const esc = $('escalaSel').value;
+  const fEsc = r => !esc || r.escala.toLowerCase()===esc.toLowerCase();
+
+  // ----- Fonte A por dia -----
+  let aDays; // Map 'dd/mm' -> {sites:{fk:{meli,id,vol,...}}, total, wd, ...}
+  if(A.type==='resumo'){
+    aDays = A.days;
+  } else {
+    aDays = new Map();
+    A.recs.forEach(r=>{
+      if(!aDays.has(r.dkey)) aDays.set(r.dkey, {key:r.dkey, dd:r.dd, mm:r.mm, wd:'', scope:null, sites:{}, total:null, blocks:1, totalCount:0, overwrites:0, fromBase:true});
+      const d = aDays.get(r.dkey);
+      if(!d.sites[r.filial]) d.sites[r.filial] = {label:filialLabel(r.filial), vol:null, hcSop:null, hcProd:null, abs:null, meli:0, id:0};
+      const s = d.sites[r.filial];
+      if(r.solic==='MELI') s.meli++;
+      else if(r.solic==='ID') s.id++;
+    });
+  }
+
+  // ----- período = meses presentes na Fonte A -----
+  const monthsA = new Set([...aDays.values()].map(d=>d.mm));
+  const bAll = B.recs;
+  const bInPeriod = bAll.filter(r=>monthsA.has(r.mm));
+  const bOutCount = bAll.length - bInPeriod.length;
+  const bMonthsOut = [...new Set(bAll.filter(r=>!monthsA.has(r.mm)).map(r=>MES_NOME[r.mm]||r.mm))];
+  const bIn = bInPeriod.filter(fEsc);
+  const escExcluded = bInPeriod.length - bIn.length;
+
+  // ----- universo de dias e filiais -----
+  const dayKeys = [...new Set([...aDays.keys(), ...bIn.map(r=>r.dkey)])].sort(dkSort);
+  const filialSet = new Set();
+  aDays.forEach(d=>Object.keys(d.sites).forEach(k=>filialSet.add(k)));
+  bIn.forEach(r=>filialSet.add(r.filial));
+  const filiais = [...filialSet].sort((x,y)=>{
+    const ix = SITES.findIndex(s=>s.key===x), iy = SITES.findIndex(s=>s.key===y);
+    return (ix<0?99:ix)-(iy<0?99:iy) || String(x).localeCompare(String(y));
+  });
+
+  // ----- células dia × filial -----
+  const cells = {}; // dkey|fk -> {aM,aI,bM,bI,bOther,recs,aSite}
+  const bByDayFil = {};
+  bIn.forEach(r=>{ const k=r.dkey+'|'+r.filial; (bByDayFil[k]=bByDayFil[k]||[]).push(r); });
+  dayKeys.forEach(dk=>{
+    const ad = aDays.get(dk);
+    filiais.forEach(fk=>{
+      const aSite = ad ? ad.sites[fk] : null;
+      const recs = bByDayFil[dk+'|'+fk] || [];
+      cells[dk+'|'+fk] = {
+        aM: aSite && aSite.meli!=null ? aSite.meli : null,
+        aI: aSite && aSite.id!=null ? aSite.id : null,
+        bM: recs.filter(r=>r.solic==='MELI').length,
+        bI: recs.filter(r=>r.solic==='ID').length,
+        bVazio: recs.filter(r=>r.solic==='VAZIO').length,
+        bOutro: recs.filter(r=>r.solic==='OUTRO').length,
+        recs, aSite
+      };
+    });
+  });
+
+  lastResult = {A, aDays, dayKeys, filiais, cells, bIn, bAll, bOutCount, bMonthsOut, esc, escExcluded};
+  render(lastResult);
+}
+
+/* ================= RENDER ================= */
+function cellClass(a, b){
+  if(a==null && b===0) return 'c-nil';
+  if(a==null) return 'c-exc';          // só na Fonte B
+  if(b===a) return 'c-ok';
+  return b>a ? 'c-exc' : 'c-fal';
+}
+function cellTxt(a, b){
+  const at = a==null ? '—' : a;
+  return `${at}<span class="arr">→</span>${b}`;
+}
+
+function renderMatrix(R, view){
+  const isMeli = view==='meli';
+  const head = ['<tr><th style="text-align:left">Dia</th>']
+    .concat(R.filiais.map(fk=>`<th class="${isMeli?'grp-meli':'grp-id'}">${filialLabel(fk).replace(/^SMG\d+ - /,'')}</th>`))
+    .concat([`<th class="${isMeli?'grp-meli':'grp-id'}">Total ${isMeli?'MELI':'ID'}</th><th>Status</th></tr>`]);
+  $('matrixHead').innerHTML = head.join('');
+
+  const rows = [];
+  let gA=0, gB=0;
+  const colA = {}, colB = {};
+  R.dayKeys.forEach(dk=>{
+    const ad = R.aDays.get(dk);
+    let dA=0, dB=0, hasA=false;
+    const tds = R.filiais.map(fk=>{
+      const c = R.cells[dk+'|'+fk];
+      const a = isMeli ? c.aM : c.aI, b = isMeli ? c.bM : c.bI;
+      if(a!=null){ dA+=a; hasA=true; colA[fk]=(colA[fk]||0)+a; }
+      colB[fk]=(colB[fk]||0)+b;
+      dB+=b;
+      return `<td class="cell ${cellClass(a,b)}">${cellTxt(a,b)}</td>`;
+    });
+    gA+=dA; gB+=dB;
+    const diff = dB-dA;
+    let st, cls;
+    if(!ad || !Object.keys(ad.sites||{}).length){ st='Sem resumo'; cls='s-dim'; }
+    else if(!hasA && dB===0){ st='—'; cls='s-dim'; }
+    else if(diff===0){ st='Bate ✓'; cls='s-ok'; }
+    else if(diff>0){ st='+'+diff+' excedente'; cls='s-bad'; }
+    else { st=diff+' abaixo'; cls='s-warn'; }
+    rows.push(`
+      <tr class="expandable" data-d="${dk}">
+        <td class="day">${dk} <span class="wd">${ad&&ad.wd?ad.wd:''}</span></td>
+        ${tds.join('')}
+        <td class="cell ${cellClass(hasA?dA:null,dB)}">${cellTxt(hasA?dA:null,dB)}</td>
+        <td><span class="status ${cls}">${st}</span></td>
+      </tr>
+      <tr class="detail" data-detail="${dk}" style="display:none"><td colspan="${R.filiais.length+3}">${dayDetailHtml(R, dk)}</td></tr>`);
+  });
+  rows.push(`<tr class="tot"><td class="day">TOTAL período</td>
+    ${R.filiais.map(fk=>`<td class="cell ${cellClass(colA[fk]!=null?colA[fk]:null, colB[fk]||0)}">${cellTxt(colA[fk]!=null?colA[fk]:null, colB[fk]||0)}</td>`).join('')}
+    <td class="cell ${cellClass(gA,gB)}">${cellTxt(gA,gB)}</td>
+    <td><span class="status ${gB===gA?'s-ok':(gB>gA?'s-bad':'s-warn')}">${gB===gA?'Bate ✓':(gB>gA?'+':'')+(gB-gA)}</span></td></tr>`);
+  $('matrixBody').innerHTML = rows.join('');
+  document.querySelectorAll('#matrixBody tr.expandable').forEach(tr=>{
+    tr.addEventListener('click', ()=>{
+      const d = document.querySelector(`#matrixBody tr[data-detail="${tr.dataset.d}"]`);
+      d.style.display = d.style.display==='none' ? '' : 'none';
+    });
+  });
+}
+
+function dayDetailHtml(R, dk){
+  const ad = R.aDays.get(dk);
+  const dupSet = dupSetForDay(R, dk);
+  const rows = R.filiais.map(fk=>{
+    const c = R.cells[dk+'|'+fk];
+    if(c.aM==null && !c.recs.length) return '';
+    const s = c.aSite || {};
+    const dM = c.aM!=null ? c.bM-c.aM : null;
+    const dI = c.aI!=null ? c.bI-c.aI : null;
+    const dCell = d => d==null ? '<td>—</td>' : `<td><span class="delta ${d===0?'d0':(d>0?'dpos':'dneg')}">${d>0?'+':''}${d}</span></td>`;
+    return `<tr>
+      <td class="site">${filialLabel(fk)}</td>
+      <td class="num">${fmtNum(s.vol)}</td><td class="num">${fmtNum(s.hcSop)}</td><td class="num">${fmtNum(s.hcProd)}</td><td class="num">${s.abs||'—'}</td>
+      <td class="num">${c.aM!=null?c.aM:'—'}</td><td class="num">${c.bM}</td>${dCell(dM)}
+      <td class="num">${c.aI!=null?c.aI:'—'}</td><td class="num">${c.bI}</td>${dCell(dI)}
+    </tr>`;
+  }).join('');
+  const totLine = ad && ad.total ? `<div class="hint" style="margin-top:4px">Linha TOTAL declarada na Fonte A: MELI ${ad.total.meli} · ID ${ad.total.id}</div>` : '';
+  const names = R.filiais.map(fk=>{
+    const c = R.cells[dk+'|'+fk];
+    if(!c.recs.length) return '';
+    return `<details class="names-det"><summary>${filialLabel(fk)} — ${c.recs.length} registro(s) na Fonte B</summary>${namesHtml(c.recs, dupSet, fk)}</details>`;
+  }).join('');
+  return `<table class="mini-tbl"><thead><tr>
+      <th style="text-align:left">Filial</th><th>Volume</th><th>HC S&amp;OP</th><th>HC prod.</th><th>%ABS</th>
+      <th class="grp-meli">MELI A</th><th class="grp-meli">MELI B</th><th class="grp-meli">Δ</th>
+      <th class="grp-id">ID A</th><th class="grp-id">ID B</th><th class="grp-id">Δ</th>
+    </tr></thead><tbody>${rows || '<tr><td colspan="11" style="color:var(--ink-dim)">Sem dados neste dia.</td></tr>'}</tbody></table>${totLine}${names}`;
+}
+
+function dupSetForDay(R, dk){
+  const map = {};
+  R.bIn.filter(r=>r.dkey===dk).forEach(r=>{ if(!r.id) return; const k=r.filial+'|'+r.id; (map[k]=map[k]||[]).push(r); });
+  return new Set(Object.entries(map).filter(([,a])=>a.length>1).map(([k])=>k));
+}
+function namesHtml(recs, dupSet, fk){
+  const li = r => `<li class="${!r.id?'noid':(dupSet.has(fk+'|'+r.id)?'dup':'')}">${r.nome} <span style="opacity:.55;font-family:var(--mono);font-size:11px">${r.id||'s/ ID'}${r.empresa?' · '+r.empresa:''}${r.escala?' · '+r.escala:''}</span></li>`;
+  const meli = recs.filter(r=>r.solic==='MELI'), id = recs.filter(r=>r.solic==='ID'),
+        out = recs.filter(r=>r.solic==='OUTRO'||r.solic==='VAZIO');
+  return `<div class="names">
+    <div><h4 class="h-meli">MELI · ${meli.length}</h4><ol>${meli.map(li).join('')||'<em>—</em>'}</ol></div>
+    <div><h4 class="h-id">ID LOGISTICS · ${id.length}</h4><ol>${id.map(li).join('')||'<em>—</em>'}</ol>
+    ${out.length? `<h4 class="h-out" style="margin-top:10px">SOLICITANTE VAZIO/OUTRO · ${out.length}</h4><ol>${out.map(li).join('')}</ol>`:''}</div>
+  </div>`;
+}
+
+function render(R){
+  $('dash').style.display='block';
+  renderMatrix(R, $('viewToggle').querySelector('button.active').dataset.v);
+
+  // ----- consolidado por filial -----
+  let tMA=0,tMB=0,tIA=0,tIB=0, excM=0,excI=0, falM=0,falI=0, okDays=0, cmpDays=0;
+  const consRows = [];
+  R.filiais.forEach(fk=>{
+    let aM=0,bM=0,aI=0,bI=0, hasA=false, diasOk=0, diasCmp=0;
+    R.dayKeys.forEach(dk=>{
+      const c = R.cells[dk+'|'+fk];
+      if(c.aM!=null){ aM+=c.aM; aI+=c.aI; hasA=true; diasCmp++;
+        if(c.bM===c.aM && c.bI===c.aI) diasOk++;
+        excM += Math.max(0,c.bM-c.aM); excI += Math.max(0,c.bI-c.aI);
+        falM += Math.max(0,c.aM-c.bM); falI += Math.max(0,c.aI-c.bI);
+      }
+      bM+=c.bM; bI+=c.bI;
+    });
+    tMA+=aM; tMB+=bM; tIA+=aI; tIB+=bI;
+    const dM=bM-aM, dI=bI-aI;
+    let st, cls;
+    if(!hasA){ st='Só na Fonte B'; cls='s-warn'; }
+    else if(dM===0&&dI===0){ st='Bate ✓'; cls='s-ok'; }
+    else if(dM>0||dI>0){ st='Excedente (custo)'; cls='s-bad'; }
+    else { st='Abaixo do previsto'; cls='s-warn'; }
+    const dCell = (d,show) => !show ? '<td>—</td>' : `<td><span class="delta ${d===0?'d0':(d>0?'dpos':'dneg')}">${d>0?'+':''}${d}</span></td>`;
+    consRows.push(`<tr>
+      <td class="site">${filialLabel(fk)}</td>
+      <td class="num">${hasA?aM:'—'}</td><td class="num">${bM}</td>${dCell(dM,hasA)}
+      <td class="num">${hasA?aI:'—'}</td><td class="num">${bI}</td>${dCell(dI,hasA)}
+      <td class="num">${hasA?diasOk+'/'+diasCmp:'—'}</td>
+      <td><span class="status ${cls}">${st}</span></td></tr>`);
+  });
+  $('consBody').innerHTML = consRows.join('');
+
+  // dias batendo (total do dia, MELI+ID)
+  R.dayKeys.forEach(dk=>{
+    const ad = R.aDays.get(dk);
+    if(!ad || !Object.keys(ad.sites||{}).length) return;
+    cmpDays++;
+    let ok = true;
+    R.filiais.forEach(fk=>{ const c=R.cells[dk+'|'+fk];
+      if(c.aM!=null && (c.bM!==c.aM || c.bI!==c.aI)) ok=false;
+      if(c.aM==null && (c.bM>0||c.bI>0) && !SITES.find(s=>s.key===fk&&s.extra)) ok=false;
+    });
+    if(ok) okDays++;
+  });
+
+  // ----- KPIs -----
+  const totExc = excM+excI, totFal = falM+falI;
+  const range = R.dayKeys.length ? R.dayKeys[0]+' a '+R.dayKeys[R.dayKeys.length-1] : '—';
+  $('kpis').innerHTML = `
+    <div class="kpi k-amber"><div class="n">${R.dayKeys.length}</div><div class="l">Dias no período<br>(${okDays}/${cmpDays} dias batem 100%)</div></div>
+    <div class="kpi k-amber"><div class="n">${tMA} <span class="sep">→</span> ${tMB}</div><div class="l">MELI: Fonte A → Fonte B (Δ ${tMB-tMA>0?'+':''}${tMB-tMA})</div></div>
+    <div class="kpi k-blue"><div class="n">${tIA} <span class="sep">→</span> ${tIB}</div><div class="l">ID: Fonte A → Fonte B (Δ ${tIB-tIA>0?'+':''}${tIB-tIA})</div></div>
+    <div class="kpi ${totExc?'k-bad':'k-ok'}"><div class="n">+${totExc}</div><div class="l">Diárias excedentes (custo adicional)</div></div>
+    <div class="kpi ${totFal?'k-warn':'k-ok'}"><div class="n">−${totFal}</div><div class="l">Diárias previstas sem registro na B</div></div>`;
+  $('dashMeta').textContent = `período ${range} · Fonte A: ${R.A.type==='resumo'?R.aDays.size+' resumo(s)':'base'} · Fonte B: ${R.bIn.length} registros no período`
+    + (R.esc ? ` · escala "${R.esc}"` : '');
+
+  // ----- alertas de custo -----
+  const costAlerts = [];
+  if(excM+excI > 0){
+    costAlerts.push(`<div class="insight i-cost"><span class="cost-badge">TOTAL PERÍODO</span><b>+${excM} diária(s) MELI</b> e <b>+${excI} diária(s) ID Logistics</b> na Fonte B além do previsto na Fonte A — quantidades sujeitas a custo além do acordado.</div>`);
+    // top dias/filiais excedentes
+    const excList = [];
+    R.dayKeys.forEach(dk=>R.filiais.forEach(fk=>{
+      const c=R.cells[dk+'|'+fk]; if(c.aM==null) return;
+      const eM=Math.max(0,c.bM-c.aM), eI=Math.max(0,c.bI-c.aI);
+      if(eM+eI>0) excList.push({dk,fk,eM,eI,tot:eM+eI});
+    }));
+    excList.sort((a,b)=>b.tot-a.tot).slice(0,8).forEach(e=>{
+      costAlerts.push(`<div class="insight i-cost"><span class="cost-badge">CUSTO ADICIONAL</span><b>${e.dk} · ${filialLabel(e.fk)}:</b> ${e.eM?`+${e.eM} MELI`:''}${e.eM&&e.eI?' e ':''}${e.eI?`+${e.eI} ID`:''} além do previsto no resumo.</div>`);
+    });
+  } else {
+    costAlerts.push(`<div class="insight i-ok"><b>Sem custo adicional no período.</b> Nenhum dia/filial tem diaristas na Fonte B além do previsto na Fonte A.</div>`);
+  }
+  $('costAlerts').innerHTML = costAlerts.join('');
+
+  // ----- irregularidades & insights -----
+  const ins = [];
+  // resumo geral
+  ins.push(`<div class="insight i-info"><b>Visão geral:</b> no período ${range}, a Fonte A previu <b>${tMA} diárias MELI</b> e <b>${tIA} ID</b>; a Fonte B registra <b>${tMB} MELI</b> e <b>${tIB} ID</b>. ${totFal>0?`Há <b>${totFal} diária(s) previstas sem registro correspondente</b> na base — solicitações não lançadas, cancelamentos ou base incompleta.`:''}</div>`);
+  // maiores gaps por filial
+  const gaps = R.filiais.map(fk=>{
+    let aM=0,bM=0,has=false;
+    R.dayKeys.forEach(dk=>{ const c=R.cells[dk+'|'+fk]; if(c.aM!=null){aM+=c.aM;has=true;} bM+=c.bM; });
+    return {fk, d:bM-aM, has};
+  }).filter(g=>g.has && g.d!==0).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+  if(gaps.length) ins.push(`<div class="insight ${Math.abs(gaps[0].d)>10?'i-bad':'i-warn'}"><b>Maior divergência MELI do período:</b> ${filialLabel(gaps[0].fk)} com <b>${gaps[0].d>0?'+':''}${gaps[0].d}</b> diária(s) (B − A).${gaps[1]?` Em seguida: ${filialLabel(gaps[1].fk)} (${gaps[1].d>0?'+':''}${gaps[1].d}).`:''}</div>`);
+  // dias previstos sem nenhum registro na B
+  const missDays = R.dayKeys.filter(dk=>{
+    const ad=R.aDays.get(dk); if(!ad||!Object.keys(ad.sites||{}).length) return false;
+    const predicted = Object.values(ad.sites).reduce((t,s)=>t+(s.meli||0)+(s.id||0),0);
+    const got = R.filiais.reduce((t,fk)=>t+R.cells[dk+'|'+fk].recs.length,0);
+    return predicted>0 && got===0;
+  });
+  if(missDays.length) ins.push(`<div class="insight i-bad"><b>Dias previstos sem NENHUM registro na Fonte B:</b> ${missDays.join(', ')}. A base efetiva não cobre esses dias — confronto impossível; verifique se a planilha está completa.</div>`);
+  // dias na B sem resumo na A
+  const noResumoDays = R.dayKeys.filter(dk=>{
+    const ad=R.aDays.get(dk);
+    const got = R.filiais.reduce((t,fk)=>t+R.cells[dk+'|'+fk].recs.length,0);
+    return got>0 && (!ad || !Object.keys(ad.sites||{}).length);
+  });
+  if(noResumoDays.length) ins.push(`<div class="insight i-warn"><b>Dias com registros na Fonte B mas sem dados no resumo:</b> ${noResumoDays.map(d=>{const n=R.filiais.reduce((t,fk)=>t+R.cells[d+'|'+fk].recs.length,0);return `${d} (${n} reg.)`}).join(', ')} — o previsto desses dias não foi informado na Fonte A.</div>`);
+  // dias duplicados / blocos duplicados no texto
+  if(R.A.type==='resumo'){
+    R.aDays.forEach(d=>{
+      if(d.blocks>1) ins.push(`<div class="insight i-warn"><b>Dia ${d.key} apareceu ${d.blocks}× no texto colado.</b> Considerei a última versão de cada filial. Confira se não colou versão antiga e revisada juntas.</div>`);
+      else if(d.overwrites>0 || d.totalCount>0) ins.push(`<div class="insight i-warn"><b>Dia ${d.key} tem blocos repetidos dentro do mesmo resumo</b> (${d.totalCount+1} linha(s) TOTAL). Considerei a última versão — possível colagem duplicada/revisada.</div>`);
+    });
+    // consistência TOTAL declarado × soma dos sites
+    R.aDays.forEach(d=>{
+      if(!d.total || !Object.keys(d.sites).length) return;
+      const sM = Object.values(d.sites).reduce((t,s)=>t+(s.meli||0),0);
+      const sI = Object.values(d.sites).reduce((t,s)=>t+(s.id||0),0);
+      if(sM!==d.total.meli || sI!==d.total.id)
+        ins.push(`<div class="insight i-warn"><b>TOTAL do resumo de ${d.key} não fecha:</b> soma dos sites = MELI ${sM} · ID ${sI}, mas a linha TOTAL diz MELI ${d.total.meli} · ID ${d.total.id}. O erro está no próprio texto da Fonte A.</div>`);
+    });
+  }
+  // GROOT ID duplicado no mesmo dia/filial
+  const dupMap = {};
+  R.bIn.forEach(r=>{ if(!r.id) return; const k=r.dkey+'|'+r.filial+'|'+r.id; (dupMap[k]=dupMap[k]||[]).push(r); });
+  const dups = Object.values(dupMap).filter(a=>a.length>1);
+  dups.slice(0,10).forEach(g=>{
+    const r=g[0];
+    const nomes=[...new Set(g.map(x=>x.nome))];
+    ins.push(`<div class="insight i-bad"><b>GROOT ID duplicado (Fonte B):</b> <span class="pill">${r.id}</span> aparece ${g.length}× em ${filialLabel(r.filial)} no dia ${r.dkey}${nomes.length>1?` com <b>nomes diferentes</b> (${nomes.join(' / ')}) — possível erro de cadastro`:` (${r.nome})`}. Contagem inflada — pode gerar cobrança em dobro.</div>`);
+  });
+  if(dups.length>10) ins.push(`<div class="insight i-bad">…e mais ${dups.length-10} caso(s) de GROOT ID duplicado no período.</div>`);
+  // solicitante vazio / outro
+  const vaz = R.bIn.filter(r=>r.solic==='VAZIO');
+  if(vaz.length){
+    const porFil = {};
+    vaz.forEach(r=>{ porFil[r.filial]=(porFil[r.filial]||0)+1; });
+    ins.push(`<div class="insight i-bad"><b>Solicitante em branco (Fonte B):</b> ${vaz.length} registro(s) sem SOLICITANTE — ${Object.entries(porFil).map(([f,n])=>`${filialLabel(f)}: ${n}`).join(' · ')}. Esses registros <b>não contam nem como MELI nem como ID</b> no confronto e o custo fica indefinido. Preencha a coluna SOLICITANTE.</div>`);
+  }
+  const outro = R.bIn.filter(r=>r.solic==='OUTRO');
+  if(outro.length) ins.push(`<div class="insight i-warn"><b>Solicitante não identificado:</b> ${outro.length} registro(s) com valor fora do padrão (nem MELI nem ID Logistics): ${[...new Set(outro.map(r=>r.solic))].join(', ')}.</div>`);
+  // sem groot id
+  const noId = R.bIn.filter(r=>!r.id);
+  if(noId.length) ins.push(`<div class="insight i-bad"><b>Sem GROOT ID (Fonte B):</b> ${noId.length} registro(s) sem identificação — ${noId.slice(0,5).map(r=>r.nome).join(', ')}${noId.length>5?'…':''}. Impossível validar o diarista.</div>`);
+  // ids não numéricos
+  const badId = R.bIn.filter(r=>r.id && !/^\d+$/.test(r.id));
+  if(badId.length) ins.push(`<div class="insight i-warn"><b>GROOT ID fora do padrão:</b> ${badId.length} registro(s) com ID não numérico: ${[...new Set(badId.map(r=>r.id))].slice(0,6).join(', ')}.</div>`);
+  // diaristas recorrentes
+  const freq = {};
+  R.bIn.forEach(r=>{ if(!r.id) return; const k=r.id; freq[k]=freq[k]||{nome:r.nome, dias:new Set(), fil:r.filial}; freq[k].dias.add(r.dkey); });
+  const top = Object.entries(freq).map(([id,v])=>({id, nome:v.nome, n:v.dias.size, fil:v.fil})).filter(t=>t.n>=5).sort((a,b)=>b.n-a.n).slice(0,5);
+  if(top.length) ins.push(`<div class="insight i-info"><b>Diaristas mais recorrentes no período:</b> ${top.map(t=>`${t.nome} (<span class="pill">${t.id}</span>, ${t.n} dias)`).join(' · ')}. Recorrência alta pode indicar demanda fixa — avaliar efetivação × diária.</div>`);
+  // registros fora do período
+  if(R.bOutCount>0) ins.push(`<div class="insight i-info"><b>${R.bOutCount} registro(s) da Fonte B fora do período</b> (mês: ${R.bMonthsOut.join(', ')}) foram ignorados no confronto.</div>`);
+  // filtro de escala
+  if(R.esc && R.escExcluded>0) ins.push(`<div class="insight i-info">Filtro de escala "${R.esc}" excluiu ${R.escExcluded} registro(s) da Fonte B no período. Limpe o filtro para contar tudo.</div>`);
+  if(ins.length<=1) ins.push('<div class="insight i-ok">Nenhuma irregularidade encontrada no período.</div>');
+  $('insights').innerHTML = ins.join('');
+  $('dash').scrollIntoView({behavior:'smooth'});
+}
+
+/* ================= EXPORT CSV ================= */
+$('btnCsv').addEventListener('click', ()=>{
+  if(!lastResult) return;
+  const R = lastResult;
+  const lines = ['Dia;Filial;MELI Fonte A;MELI Fonte B;Delta MELI;ID Fonte A;ID Fonte B;Delta ID;Volume previsto;HC S&OP;HC produtividade;%ABS'];
+  R.dayKeys.forEach(dk=>R.filiais.forEach(fk=>{
+    const c = R.cells[dk+'|'+fk];
+    if(c.aM==null && !c.recs.length) return;
+    const s = c.aSite||{};
+    lines.push([dk, filialLabel(fk),
+      c.aM!=null?c.aM:'', c.bM, c.aM!=null?c.bM-c.aM:'',
+      c.aI!=null?c.aI:'', c.bI, c.aI!=null?c.bI-c.aI:'',
+      s.vol!=null?s.vol:'', s.hcSop!=null?s.hcSop:'', s.hcProd!=null?s.hcProd:'', s.abs||''].join(';'));
+  }));
+  const blob = new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'confronto_diaristas_periodo.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+</script>
+</body>
+</html>
