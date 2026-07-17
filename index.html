@@ -184,7 +184,9 @@ tr.detail>td{background:var(--bg-2);padding:12px 14px;text-align:left}
 .drawer-box{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:1000px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
 .drawer-head{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line);background:var(--card-2)}
 .drawer-head h3{font-family:var(--disp);font-size:15px;text-transform:uppercase;letter-spacing:.4px}
-.drawer-head button{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--ink-soft);border-radius:7px;width:32px;height:32px;cursor:pointer;font-size:16px}
+.drawer-head #drawerClose{background:transparent;border:1px solid var(--line);color:var(--ink-soft);border-radius:7px;width:32px;height:32px;cursor:pointer;font-size:16px}
+.drawer-head #drawerXlsx{margin-left:auto;background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ok);border-radius:7px;padding:0 14px;height:32px;cursor:pointer;font-family:var(--body);font-weight:700;font-size:12.5px}
+.drawer-head #drawerXlsx:hover{background:var(--ok);color:#062015}
 .drawer-body{padding:16px 18px;overflow:auto}
 .rej-line{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);padding:4px 0;border-bottom:1px solid var(--line-soft)}
 
@@ -429,7 +431,7 @@ header.top{position:relative}
 
 <!-- DRAWER -->
 <div id="drawer"><div class="drawer-box">
-  <div class="drawer-head"><h3 id="drawerTitle"></h3><button id="drawerClose">✕</button></div>
+  <div class="drawer-head"><h3 id="drawerTitle"></h3><button id="drawerXlsx" title="Exportar esta lista em Excel">⬇ Excel</button><button id="drawerClose">✕</button></div>
   <div class="drawer-body" id="drawerBody"></div>
 </div></div>
 
@@ -1107,19 +1109,22 @@ document.addEventListener('click',e=>{
 function drillAudit(code){
   const A=getSourceA(), B=getSourceB();
   const vA=validateImport(A,$('countMode').value), vB=validateImport(B,$('countMode').value);
-  let title='', html='';
+  let title='', html='', rows=[];
   if(code==='A:conflicts'){ title='Conflitos de valor na Fonte A';
-    html = vA.conflicts.length? vA.conflicts.map(c=>`<div class="rej-line">${escapeHtml(fmtBR(c.iso))} · ${escapeHtml(c.op)} · ${escapeHtml(branchLabel(c.filialKey))} · ${escapeHtml(c.sol)}: valor ${c.prev} vs ${c.novo} (mantido o 1º; conflito sinalizado)</div>`).join('') : '<em>Nenhum conflito.</em>'; }
+    html = vA.conflicts.length? vA.conflicts.map(c=>`<div class="rej-line">${escapeHtml(fmtBR(c.iso))} · ${escapeHtml(c.op)} · ${escapeHtml(branchLabel(c.filialKey))} · ${escapeHtml(c.sol)}: valor ${c.prev} vs ${c.novo} (mantido o 1º; conflito sinalizado)</div>`).join('') : '<em>Nenhum conflito.</em>';
+    rows = vA.conflicts.map(c=>({Data:fmtBRfull(c.iso),Operacao:c.op,Filial:branchLabel(c.filialKey),Solicitante:c.sol,Valor_1:c.prev,Valor_2:c.novo,Mantido:c.prev})); }
   else if(code==='A:dupdays'){ title='Dias com blocos repetidos (Fonte A)';
     const dd=[...A.resumo.dayMeta.values()].filter(d=>d.blocks>1);
-    html = dd.length? dd.map(d=>`<div class="rej-line">${escapeHtml(fmtBR(d.iso))} — ${d.blocks} blocos; ${d.totals.length} linha(s) TOTAL. Duplicatas idênticas ignoradas; divergências viram conflito.</div>`).join('') : '<em>Nenhum.</em>'; }
+    html = dd.length? dd.map(d=>`<div class="rej-line">${escapeHtml(fmtBR(d.iso))} — ${d.blocks} blocos; ${d.totals.length} linha(s) TOTAL. Duplicatas idênticas ignoradas; divergências viram conflito.</div>`).join('') : '<em>Nenhum.</em>';
+    rows = dd.map(d=>({Data:fmtBRfull(d.iso),Blocos:d.blocks,Linhas_TOTAL:d.totals.length})); }
   else {
     const src = code[0]==='A'?A:B; const v=code[0]==='A'?vA:vB; const kind=code.split(':')[1];
     const list = kind==='dupexact'?v.dupExactRecs:kind==='noid'?v.noIdRecs:kind==='notclass'?v.notClassifiedRecs:kind==='rejected'?v.rejectedRecs:[];
     title = ({dupexact:'Duplicidades exatas',noid:'Registros sem GROOT ID',notclass:'Operações não classificadas',rejected:'Linhas rejeitadas'})[kind]+' — '+src.origem;
     html = list.length? list.map(r=>`<div class="rej-line">${escapeHtml(r.aba||'')}${r.linha?(' L'+r.linha):''} · ${escapeHtml(fmtBR(r.data)||'')} · ${escapeHtml(r.nome||r.dump||'')} ${r.grootId?('· '+escapeHtml(r.grootId)):''} ${r.motivo?('· '+escapeHtml(r.motivo)):''} ${r.operacao?('· op '+escapeHtml(r.operacao)):''}</div>`).join('') : '<em>Nenhum.</em>';
+    rows = list.map(r=>({Aba:r.aba||'',Linha:r.linha||'',Data:fmtBRfull(r.data)||'',Filial:branchLabel(r.filialKey)||'',Operacao:r.operacao||'',Solicitante:r.solicitante||'',GROOT_ID:r.grootId||'',Nome:r.nome||'',Motivo:r.motivo||'',Conteudo:r.dump||''}));
   }
-  openDrawer(title, html);
+  openDrawer(title, html, rows);
 }
 
 /* =========================================================================
@@ -1407,7 +1412,7 @@ function renderFinancial(){
     const t=k.dataset.fin;
     if(t==='exp') openCellDrawer('Células com exposição (B > A)', cmp.filter(c=>c.exposure>0));
     else if(t==='def') openCellDrawer('Células com déficit de cobertura (A > B)', cmp.filter(c=>c.deficit>0));
-    else openDrawer('Duplicidades exatas na Fonte B (custo potencial)', dupCost.html);
+    else openDrawer('Duplicidades exatas na Fonte B (custo potencial)', dupCost.html, dupCost.rows);
   }));
 }
 function dupExactCostB(){
@@ -1417,7 +1422,8 @@ function dupExactCostB(){
     if(seen.has(k)) dups.push(r); else seen.add(k); });
   let value=0; dups.forEach(r=>value+=resolveCost(r.data,r.solicitante,r.operacao));
   const html = dups.length? dups.map(r=>`<div class="rej-line">${escapeHtml(fmtBR(r.data))} · ${escapeHtml(branchLabel(r.filialKey))} · ${escapeHtml(r.operacao)} · ${escapeHtml(r.solicitante)} · ${escapeHtml(r.nome)} (${escapeHtml(r.grootId||'s/ID')}) → ${fmtMoney(resolveCost(r.data,r.solicitante,r.operacao))}</div>`).join(''):'<em>Nenhuma duplicidade exata.</em>';
-  return {count:dups.length, value, html};
+  const rows = dups.map(r=>({Data:fmtBRfull(r.data),Filial:branchLabel(r.filialKey),Operacao:r.operacao,Solicitante:r.solicitante,GROOT_ID:r.grootId||'',Nome:r.nome,Aba:r.aba||'',Linha:r.linha||'',Custo_potencial:+resolveCost(r.data,r.solicitante,r.operacao).toFixed(2)}));
+  return {count:dups.length, value, html, rows};
 }
 function inRange(iso){ return iso>=lastResult.ini && iso<=lastResult.fim; }
 function passRecordFilter(r){
@@ -1475,18 +1481,25 @@ function renderNominal(){
   $('nominalBlock').querySelectorAll('[data-nom]').forEach(k=>k.addEventListener('click',()=>drillNominal(k.dataset.nom,N)));
 }
 function drillNominal(kind,N){
-  let title='',html='';
+  let title='',html='',rows=[];
   const recLine=r=>`<div class="rej-line">${escapeHtml(fmtBR(r.data))} · ${escapeHtml(r.origem)} · ${escapeHtml(branchLabel(r.filialKey))} · ${escapeHtml(r.operacao)} · ${escapeHtml(r.solicitante)} · ${escapeHtml(r.nome||'(sem nome)')} (${escapeHtml(r.grootId||'s/ID')})</div>`;
-  if(kind==='both'){ title='Presente nas duas fontes'; html=N.both.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> — A:${x.a.length}× · B:${x.b.length}× — ${escapeHtml((x.a[0]||x.b[0]).nome)}</div>`).join(''); }
-  else if(kind==='onlyA'){ title='Somente na Fonte A'; html=N.onlyA.flatMap(x=>x.recs).map(recLine).join(''); }
-  else if(kind==='onlyB'){ title='Somente na Fonte B'; html=N.onlyB.flatMap(x=>x.recs).map(recLine).join(''); }
-  else if(kind==='dupA'){ title='Duplicado na Fonte A'; html=N.dupA.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> ${escapeHtml(x.recs[0].nome)} — ${x.recs.length}×</div>`).join(''); }
-  else if(kind==='dupB'){ title='Duplicado na Fonte B'; html=N.dupB.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> ${escapeHtml(x.recs[0].nome)} — ${x.recs.length}×</div>`).join(''); }
-  else if(kind==='sidn'){ title='Mesmo GROOT ID com nomes diferentes'; html=N.sameIdDiffName.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> → ${x.names.map(escapeHtml).join(' / ')}</div>`).join(''); }
-  else if(kind==='sndi'){ title='Mesmo nome com GROOT IDs diferentes'; html=N.sameNameDiffId.map(x=>`<div class="rej-line">${escapeHtml(x.nome)} → ${x.ids.map(escapeHtml).join(' / ')}</div>`).join(''); }
-  else if(kind==='noid'){ title='Sem GROOT ID'; html=N.noId.map(recLine).join(''); }
-  else if(kind==='unk'){ title='Solicitante não reconhecido'; html=N.unkSolic.map(recLine).join(''); }
-  openDrawer(title, html||'<em>Nenhum.</em>');
+  const recRowN=r=>({Data:fmtBRfull(r.data),Origem:r.origem,Filial:branchLabel(r.filialKey),Operacao:r.operacao,Turno:r.turno,Solicitante:r.solicitante,GROOT_ID:r.grootId||'',Nome:r.nome||'',Empresa:r.empresaDiarista||'',Aba:r.aba||'',Linha:r.linha||''});
+  if(kind==='both'){ title='Presente nas duas fontes';
+    html=N.both.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> — A:${x.a.length}× · B:${x.b.length}× — ${escapeHtml((x.a[0]||x.b[0]).nome)}</div>`).join('');
+    rows=N.both.map(x=>({GROOT_ID:x.id, Nome:(x.a[0]||x.b[0]).nome, Ocorrencias_A:x.a.length, Ocorrencias_B:x.b.length})); }
+  else if(kind==='onlyA'){ title='Somente na Fonte A'; const rs=N.onlyA.flatMap(x=>x.recs); html=rs.map(recLine).join(''); rows=rs.map(recRowN); }
+  else if(kind==='onlyB'){ title='Somente na Fonte B'; const rs=N.onlyB.flatMap(x=>x.recs); html=rs.map(recLine).join(''); rows=rs.map(recRowN); }
+  else if(kind==='dupA'){ title='Duplicado na Fonte A'; html=N.dupA.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> ${escapeHtml(x.recs[0].nome)} — ${x.recs.length}×</div>`).join('');
+    rows=N.dupA.map(x=>({GROOT_ID:x.id, Nome:x.recs[0].nome, Ocorrencias:x.recs.length, Datas:[...new Set(x.recs.map(r=>fmtBR(r.data)))].join(' ')})); }
+  else if(kind==='dupB'){ title='Duplicado na Fonte B'; html=N.dupB.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> ${escapeHtml(x.recs[0].nome)} — ${x.recs.length}×</div>`).join('');
+    rows=N.dupB.map(x=>({GROOT_ID:x.id, Nome:x.recs[0].nome, Ocorrencias:x.recs.length, Datas:[...new Set(x.recs.map(r=>fmtBR(r.data)))].join(' ')})); }
+  else if(kind==='sidn'){ title='Mesmo GROOT ID com nomes diferentes'; html=N.sameIdDiffName.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> → ${x.names.map(escapeHtml).join(' / ')}</div>`).join('');
+    rows=N.sameIdDiffName.map(x=>({GROOT_ID:x.id, Qtd_nomes:x.names.length, Nomes_diferentes:x.names.join(' / ')})); }
+  else if(kind==='sndi'){ title='Mesmo nome com GROOT IDs diferentes'; html=N.sameNameDiffId.map(x=>`<div class="rej-line">${escapeHtml(x.nome)} → ${x.ids.map(escapeHtml).join(' / ')}</div>`).join('');
+    rows=N.sameNameDiffId.map(x=>({Nome:x.nome, Qtd_ids:x.ids.length, GROOT_IDs:x.ids.join(' / ')})); }
+  else if(kind==='noid'){ title='Sem GROOT ID'; html=N.noId.map(recLine).join(''); rows=N.noId.map(recRowN); }
+  else if(kind==='unk'){ title='Solicitante não reconhecido'; html=N.unkSolic.map(recLine).join(''); rows=N.unkSolic.map(recRowN); }
+  openDrawer(title, html||'<em>Nenhum.</em>', rows);
 }
 
 /* alertas de custo */
@@ -1571,20 +1584,39 @@ function renderStoryAndKpis(){
     const t=k.dataset.kpi;
     if(t==='exp') openCellDrawer('Células com exposição (B > A)', exc);
     else if(t==='def') openCellDrawer('Células com déficit de cobertura (A > B)', def);
-    else openDrawer('Duplicidades exatas na Fonte B', dupB.html);
+    else openDrawer('Duplicidades exatas na Fonte B', dupB.html, dupB.rows);
   }));
 }
 
 /* =========================================================================
    DRAWER
    ========================================================================= */
-function openDrawer(title, html){ $('drawerTitle').textContent=title; $('drawerBody').innerHTML=html; $('drawer').classList.add('open'); }
+let drawerData=null; // {title, rows:[{...}]}
+function openDrawer(title, html, rows){ $('drawerTitle').textContent=title; $('drawerBody').innerHTML=html; drawerData={title, rows:rows||null}; $('drawer').classList.add('open'); }
 function openCellDrawer(title, cells){
-  const rows=cells.sort((a,b)=>(b.exposure||0)-(a.exposure||0)).map(c=>`<div class="rej-line">${escapeHtml(fmtBR(c.iso))} · ${escapeHtml(c.op)} · ${escapeHtml(branchLabel(c.fk))} · ${escapeHtml(c.sol)}: A ${c.a==null?'—':c.a} → B ${c.b==null?'—':c.b} (gap ${c.gap>0?'+':''}${c.gap})${c.exposure?(' · '+fmtMoney(c.exposure)):''}${c.deficit?(' · déficit '+c.deficit):''}</div>`).join('');
-  openDrawer(title+` — ${cells.length} célula(s)`, rows||'<em>Nenhuma.</em>');
+  const sorted=cells.slice().sort((a,b)=>(b.exposure||0)-(a.exposure||0));
+  const html=sorted.map(c=>`<div class="rej-line">${escapeHtml(fmtBR(c.iso))} · ${escapeHtml(c.op)} · ${escapeHtml(branchLabel(c.fk))} · ${escapeHtml(c.sol)}: A ${c.a==null?'—':c.a} → B ${c.b==null?'—':c.b} (gap ${c.gap>0?'+':''}${c.gap})${c.exposure?(' · '+fmtMoney(c.exposure)):''}${c.deficit?(' · déficit '+c.deficit):''}</div>`).join('');
+  const rows=sorted.map(c=>({Data:fmtBRfull(c.iso),Operacao:c.op,Filial:branchLabel(c.fk),Solicitante:c.sol,
+    Planejado_A:c.a==null?'':c.a,Realizado_B:c.b==null?'':c.b,Gap:c.gap,
+    Exposicao:c.exposure?+c.exposure.toFixed(2):'',Deficit:c.deficit||''}));
+  openDrawer(title+` — ${cells.length} célula(s)`, html||'<em>Nenhuma.</em>', rows);
 }
 $('drawerClose').addEventListener('click',()=>$('drawer').classList.remove('open'));
 $('drawer').addEventListener('click',e=>{ if(e.target===$('drawer')) $('drawer').classList.remove('open'); });
+// exportar o conteúdo atual do drawer em Excel (arquivo à parte)
+function slug(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,40)||'lista'; }
+function sheetName(s){ return (slug(s).replace(/_/g,' ')||'lista').slice(0,31); }
+$('drawerXlsx').addEventListener('click',()=>{
+  const title=$('drawerTitle').textContent||'lista';
+  let rows = drawerData&&drawerData.rows;
+  if(!rows||!rows.length){ // fallback: cada linha visível vira uma célula de texto
+    rows=[...$('drawerBody').querySelectorAll('.rej-line')].map(el=>({Item:el.innerText.trim().replace(/\s+/g,' ')}));
+  }
+  if(!rows.length){ const t=$('drawerBody').innerText.trim(); rows=[{Item:t||'sem dados'}]; }
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), sheetName(title));
+  XLSX.writeFile(wb, 'confronto_'+slug(title)+'.xlsx');
+});
 
 /* =========================================================================
    EXPORTAÇÕES
