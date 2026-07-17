@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Confronto de Diaristas — Período · Fonte A × Fonte B</title>
+<title>Confronto de Diaristas — Fonte A × Fonte B</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -17,15 +17,25 @@
   --ok:#3ecf8e; --ok-bg:rgba(62,207,142,.12); --ok-line:rgba(62,207,142,.35);
   --bad:#ff6b5e; --bad-bg:rgba(255,107,94,.12); --bad-line:rgba(255,107,94,.35);
   --warn:#ffb54d; --warn-bg:rgba(255,181,77,.12);
+  --purple:#b98bff; --purple-bg:rgba(185,139,255,.12);
   --mono:'JetBrains Mono',monospace; --disp:'Archivo',sans-serif; --body:'Inter',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:100vh}
-header{background:var(--navy);padding:26px 28px 22px;border-bottom:1px solid var(--line)}
-header h1{font-family:var(--disp);font-weight:800;font-size:clamp(20px,3.4vw,30px);letter-spacing:.3px;text-transform:uppercase}
-header h1 span{color:var(--amber)}
-header p{color:var(--ink-soft);font-size:13.5px;margin-top:6px;max-width:860px;line-height:1.5}
-.wrap{max-width:1240px;margin:0 auto;padding:26px 20px 70px}
+header.top{background:var(--navy);padding:26px 28px 22px;border-bottom:1px solid var(--line)}
+header.top h1{font-family:var(--disp);font-weight:800;font-size:clamp(20px,3.4vw,30px);letter-spacing:.3px;text-transform:uppercase}
+header.top h1 span{color:var(--amber)}
+header.top p{color:var(--ink-soft);font-size:13.5px;margin-top:6px;max-width:900px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 20px 80px}
+
+/* stepper */
+.stepper{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.step{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 13px;font-size:12.5px;color:var(--ink-soft);flex:1;min-width:150px}
+.step .num{font-family:var(--mono);font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg-2);border:1px solid var(--line);font-size:11px}
+.step.done{border-color:var(--ok-line)} .step.done .num{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-line)}
+.step.active{border-color:var(--amber)} .step.active .num{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
+.step b{color:var(--ink);font-weight:600;display:block;font-size:12.5px} .step small{font-size:10.5px;color:var(--ink-dim)}
+
 .grid-inputs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:860px){.grid-inputs{grid-template-columns:1fr}}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
@@ -40,7 +50,7 @@ header p{color:var(--ink-soft);font-size:13.5px;margin-top:6px;max-width:860px;l
 .mode button.active{background:var(--amber);color:var(--amber-ink)}
 .panel-b .mode button.active{background:var(--blue);color:#0a1226}
 .panel-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
-textarea{width:100%;min-height:200px;resize:vertical;border:1px solid var(--line);border-radius:8px;
+textarea{width:100%;min-height:190px;resize:vertical;border:1px solid var(--line);border-radius:8px;
   padding:11px 12px;font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--ink);background:var(--bg-2)}
 textarea::placeholder{color:var(--ink-dim)}
 textarea:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:transparent}
@@ -57,254 +67,392 @@ textarea:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:tr
 .filebox .fsub{font-size:12px;color:var(--ink-soft);margin-top:4px}
 .filebox.loaded{border-color:var(--ok);background:var(--ok-bg)}
 input[type=file]{display:none}
-.inline-ctrl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft)}
-select{border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-family:var(--body);font-size:13px;background:var(--bg-2);color:var(--ink);min-width:150px}
-.controls{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;
-  display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.inline-ctrl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft);flex-wrap:wrap}
+select,input[type=text],input[type=date],input[type=number]{border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-family:var(--body);font-size:13px;background:var(--bg-2);color:var(--ink);min-width:120px}
+input[type=date]{min-width:150px;color-scheme:dark}
+.controls{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.controls .row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .ctrl{display:flex;flex-direction:column;gap:5px}
 .ctrl label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft)}
-button.go{margin-left:auto;background:var(--amber);color:var(--amber-ink);border:none;border-radius:8px;
+.shortcuts{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.shortcuts button{background:var(--bg-2);color:var(--ink-soft);border:1px solid var(--line);border-radius:20px;font-size:11.5px;padding:5px 12px;cursor:pointer}
+.shortcuts button:hover{color:var(--ink);border-color:var(--amber)}
+button.go{background:var(--amber);color:var(--amber-ink);border:none;border-radius:8px;
   font-family:var(--disp);font-weight:800;font-size:14.5px;letter-spacing:.5px;text-transform:uppercase;
   padding:12px 26px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:8px}
 button.go:hover{filter:brightness(1.08);transform:translateY(-1px)}
 button.go::before{content:"⇄";font-size:17px}
-button.csv{background:var(--bg-2);color:var(--ink-soft);border:1px solid var(--line);border-radius:8px;
-  font-family:var(--body);font-weight:600;font-size:12.5px;padding:10px 16px;cursor:pointer}
-button.csv:hover{color:var(--ink);border-color:var(--ink-dim)}
+button.ghost{background:var(--bg-2);color:var(--ink-soft);border:1px solid var(--line);border-radius:8px;
+  font-family:var(--body);font-weight:600;font-size:12.5px;padding:10px 15px;cursor:pointer}
+button.ghost:hover{color:var(--ink);border-color:var(--ink-dim)}
+details.adv{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:12px}
+details.adv>summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+details.adv>summary:hover{color:var(--ink)}
+.cost-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px}
 .err{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line);border-radius:8px;padding:10px 13px;font-size:13px;margin-top:14px;display:none}
-#dash{display:none;margin-top:30px}
-.dash-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.dash-title h2{font-family:var(--disp);font-size:22px;font-weight:800;text-transform:uppercase}
-.dash-title .meta{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 15px;border-top:4px solid var(--line)}
-.kpi.k-ok{border-top-color:var(--ok)} .kpi.k-bad{border-top-color:var(--bad)}
-.kpi.k-amber{border-top-color:var(--amber)} .kpi.k-blue{border-top-color:var(--blue)}
-.kpi.k-warn{border-top-color:var(--warn)}
-.kpi .n{font-family:var(--disp);font-size:26px;font-weight:800;line-height:1;white-space:nowrap}
-.kpi .n .sep{font-size:14px;color:var(--ink-dim)}
-.kpi .l{font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;margin-top:6px;line-height:1.4}
+
 .section-h{font-family:var(--disp);font-size:13.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
   color:var(--ink-soft);margin:26px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.section-h::after{content:"";flex:1;height:1px;background:var(--line)}
+.section-h::after{content:"";flex:1;height:1px;background:var(--line);min-width:20px}
+.section-h .aside{font-size:11px;font-weight:500;color:var(--ink-dim);text-transform:none;letter-spacing:0}
 .view-toggle{display:flex;background:var(--bg-2);border:1px solid var(--line);border-radius:7px;overflow:hidden}
 .view-toggle button{border:none;background:transparent;color:var(--ink-soft);font-family:var(--body);font-size:11.5px;font-weight:600;padding:5px 12px;cursor:pointer;text-transform:none;letter-spacing:0}
 .view-toggle button.active{background:var(--amber);color:var(--amber-ink)}
+
+/* audit */
+#audit{display:none;margin-top:22px}
+.audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:860px){.audit-grid{grid-template-columns:1fr}}
+.audit-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.audit-card h3{font-family:var(--disp);font-size:14px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.stat-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--bg-2);border:1px solid var(--line-soft);border-radius:8px;padding:9px 11px}
+.stat.click{cursor:pointer} .stat.click:hover{border-color:var(--amber)}
+.stat .v{font-family:var(--disp);font-size:19px;font-weight:800}
+.stat .k{font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.stat.warn .v{color:var(--warn)} .stat.bad .v{color:var(--bad)} .stat.ok .v{color:var(--ok)}
+.map-tbl-wrap{margin-top:12px}
+.conf{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
+.conf.alta{background:var(--ok-bg);color:var(--ok)} .conf.media{background:var(--warn-bg);color:var(--warn)} .conf.baixa{background:var(--bad-bg);color:var(--bad)}
+
 .tbl-wrap{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
 th{font-family:var(--mono);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-soft);
   text-align:center;padding:10px 10px;border-bottom:2px solid var(--line);background:var(--card-2);white-space:nowrap}
 th:first-child{text-align:left}
-th.grp-meli{border-bottom-color:var(--amber)} th.grp-id{border-bottom-color:var(--blue)}
+th.grp-meli{border-bottom-color:var(--amber)} th.grp-id{border-bottom-color:var(--blue)} th.grp-tot{border-bottom-color:var(--purple)}
 td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;text-align:center}
 tr:last-child td{border-bottom:none}
-td.site,td.day{font-weight:600;white-space:nowrap;text-align:left}
-td.day .wd{color:var(--ink-dim);font-weight:400;font-size:11.5px}
+td.lft{font-weight:600;white-space:nowrap;text-align:left}
+td.lft .wd{color:var(--ink-dim);font-weight:400;font-size:11.5px}
 td.num{font-family:var(--mono);font-weight:700}
-td.cell{font-family:var(--mono);font-size:12px;font-weight:700;white-space:nowrap}
-td.cell .arr{color:var(--ink-dim);font-weight:400}
-td.c-ok{background:var(--ok-bg);color:var(--ok)}
-td.c-exc{background:var(--bad-bg);color:var(--bad)}
-td.c-fal{background:var(--warn-bg);color:var(--warn)}
-td.c-nil{color:var(--ink-dim)}
+td.money{font-family:var(--mono);font-weight:700}
 tr.tot td{background:var(--card-2);border-top:2px solid var(--line);font-weight:700}
-.delta{font-family:var(--mono);font-weight:700;font-size:12px;padding:2px 8px;border-radius:5px;display:inline-block}
-.d0{background:var(--ok-bg);color:var(--ok)}
-.dpos{background:var(--bad-bg);color:var(--bad)}
-.dneg{background:var(--warn-bg);color:var(--warn)}
-.status{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:4px 10px;border-radius:20px;white-space:nowrap}
-.s-ok{background:var(--ok-bg);color:var(--ok)} .s-bad{background:var(--bad-bg);color:var(--bad)} .s-warn{background:var(--warn-bg);color:var(--warn)}
-.s-dim{background:var(--bg-2);color:var(--ink-dim)}
+.gap{font-family:var(--mono);font-weight:700;font-size:12px;padding:2px 8px;border-radius:5px;display:inline-block}
+.g0{background:var(--ok-bg);color:var(--ok)}
+.gpos{background:var(--bad-bg);color:var(--bad)}
+.gneg{background:var(--warn-bg);color:var(--warn)}
+.gdim{color:var(--ink-dim)}
+.status{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:4px 10px;border-radius:20px;white-space:nowrap;display:inline-block}
+.s-ok{background:var(--ok-bg);color:var(--ok)} .s-exc{background:var(--bad-bg);color:var(--bad)}
+.s-def{background:var(--warn-bg);color:var(--warn)} .s-dim{background:var(--bg-2);color:var(--ink-dim)}
+.s-info{background:rgba(91,141,239,.14);color:var(--blue)} .s-purple{background:var(--purple-bg);color:var(--purple)}
 tr.expandable{cursor:pointer} tr.expandable:hover td{background:var(--card-2)}
-tr.expandable:hover td.c-ok{background:var(--ok-bg)} tr.expandable:hover td.c-exc{background:var(--bad-bg)} tr.expandable:hover td.c-fal{background:var(--warn-bg)}
-tr.detail>td{background:var(--bg-2);padding:14px 16px;text-align:left}
-.mini-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:10px}
-.mini-tbl th{font-size:10px;padding:7px 9px;background:transparent;border-bottom:1px solid var(--line)}
-.mini-tbl td{padding:7px 9px;border-bottom:1px solid var(--line-soft)}
-details.names-det{margin-top:6px}
-details.names-det summary{cursor:pointer;font-size:12px;color:var(--blue);font-weight:600}
-.names{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12.5px;margin-top:10px}
-@media(max-width:700px){.names{grid-template-columns:1fr}}
-.names h4{font-family:var(--mono);font-size:11px;letter-spacing:.6px;margin-bottom:6px}
-.names h4.h-meli{color:var(--amber)} .names h4.h-id{color:var(--blue)} .names h4.h-out{color:var(--warn)}
-.names ol{padding-left:20px;color:var(--ink-soft);line-height:1.7}
-.names .dup{color:var(--bad);font-weight:600}
-.names .noid{color:var(--warn);font-weight:600}
+tr.detail>td{background:var(--bg-2);padding:12px 14px;text-align:left}
+.mini-tbl{width:100%;border-collapse:collapse;font-size:12px;margin:4px 0}
+.mini-tbl th{font-size:9.5px;padding:6px 8px;background:transparent;border-bottom:1px solid var(--line)}
+.mini-tbl td{padding:6px 8px;border-bottom:1px solid var(--line-soft)}
+.op-h{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--purple);margin:10px 0 4px;letter-spacing:.5px}
+
+#dash{display:none;margin-top:22px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:6px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 15px;border-top:4px solid var(--line);cursor:default}
+.kpi.click{cursor:pointer;transition:.12s} .kpi.click:hover{transform:translateY(-2px);border-color:var(--ink-dim)}
+.kpi.k-ok{border-top-color:var(--ok)} .kpi.k-bad{border-top-color:var(--bad)}
+.kpi.k-amber{border-top-color:var(--amber)} .kpi.k-blue{border-top-color:var(--blue)} .kpi.k-warn{border-top-color:var(--warn)} .kpi.k-purple{border-top-color:var(--purple)}
+.kpi .n{font-family:var(--disp);font-size:24px;font-weight:800;line-height:1;white-space:nowrap}
+.kpi .n .sep{font-size:14px;color:var(--ink-dim)}
+.kpi .l{font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;margin-top:6px;line-height:1.4}
+.kpi .cta{font-size:10px;color:var(--blue);margin-top:5px;display:none}
+.kpi.click .cta{display:block}
+
+.story{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:6px 0 2px}
+@media(max-width:860px){.story{grid-template-columns:1fr}}
+.story-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-left:4px solid var(--blue)}
+.story-card.f{border-left-color:var(--amber)} .story-card.w{border-left-color:var(--bad)} .story-card.d{border-left-color:var(--ok)}
+.story-card h4{font-family:var(--disp);font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);margin-bottom:6px}
+.story-card p{font-size:13.5px;line-height:1.5}
+
+.filters{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:6px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.chip-row{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--bg-2);border:1px solid var(--line);border-radius:20px;font-size:11.5px;padding:5px 12px;cursor:pointer;color:var(--ink-soft)}
+.chip.on{background:var(--amber);color:var(--amber-ink);border-color:var(--amber);font-weight:600}
+
 .insight{background:var(--card);border:1px solid var(--line-soft);border-left:4px solid var(--line);border-radius:8px;padding:12px 15px;margin-bottom:9px;font-size:13.5px;line-height:1.55;color:var(--ink)}
 .insight b{font-weight:700}
 .i-bad{border-left-color:var(--bad)} .i-warn{border-left-color:var(--warn)} .i-ok{border-left-color:var(--ok)} .i-info{border-left-color:var(--blue)}
 .i-cost{border-left-color:var(--bad);background:linear-gradient(90deg,var(--bad-bg),var(--card) 55%)}
 .insight .pill{font-family:var(--mono);font-size:11px;background:var(--bg-2);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
 .cost-badge{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--bad);color:#2b0703;border-radius:4px;padding:2px 6px;margin-right:6px;letter-spacing:.5px}
+.exports{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.exports button{background:var(--bg-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;font-family:var(--body);font-weight:600;font-size:13px;padding:11px 18px;cursor:pointer}
+.exports button:hover{border-color:var(--amber)}
+
+/* drawer */
+#drawer{position:fixed;inset:0;background:rgba(3,6,12,.66);display:none;z-index:50;padding:30px 18px}
+#drawer.open{display:flex;justify-content:center;align-items:flex-start}
+.drawer-box{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:1000px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.drawer-head{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line);background:var(--card-2)}
+.drawer-head h3{font-family:var(--disp);font-size:15px;text-transform:uppercase;letter-spacing:.4px}
+.drawer-head button{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--ink-soft);border-radius:7px;width:32px;height:32px;cursor:pointer;font-size:16px}
+.drawer-body{padding:16px 18px;overflow:auto}
+.rej-line{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);padding:4px 0;border-bottom:1px solid var(--line-soft)}
+
 footer{text-align:center;font-size:11.5px;color:var(--ink-dim);padding:20px;font-family:var(--mono)}
+.badge-mode{font-family:var(--mono);font-size:10.5px;background:var(--bg-2);border:1px solid var(--line);border-radius:5px;padding:3px 8px;color:var(--ink-soft)}
 </style>
 </head>
 <body>
-<header>
-  <h1>Confronto de Diaristas <span>—</span> Período · Fonte A × Fonte B</h1>
-  <p>Cole na <b style="color:var(--amber)">Fonte A</b> os resumos do dia (WhatsApp) de <b>vários dias de uma vez</b> — o app extrai e compila as informações <b>por filial, dia a dia</b> (volume, HC, %ABS, diaristas MELI e ID). Na <b style="color:var(--blue)">Fonte B</b>, envie a planilha de solicitações (cada aba = uma filial). O painel confronta <b>quantos diaristas MELI e ID</b> cada fonte registra em cada dia e filial, aponta excedentes (custo adicional), faltas, GROOT ID duplicado e outras irregularidades.</p>
+<header class="top">
+  <h1>Confronto de Diaristas <span>—</span> Fonte A × Fonte B</h1>
+  <p>Confronta o <b style="color:var(--amber)">previsto (Fonte A)</b> contra o <b style="color:var(--blue)">realizado (Fonte B)</b> por <b>data × operação × filial × solicitante</b>, comparando MELI e ID Logistics separadamente. Aceita texto colado, TXT, CSV, XLS e XLSX. Roda 100% no navegador — nenhum dado sai da sua máquina.</p>
 </header>
 
 <div class="wrap">
+  <!-- STEPPER -->
+  <div class="stepper" id="stepper">
+    <div class="step" data-step="1"><span class="num">1</span><div><b>Carregar Fonte A</b><small>previsto / solicitado</small></div></div>
+    <div class="step" data-step="2"><span class="num">2</span><div><b>Carregar Fonte B</b><small>base efetiva</small></div></div>
+    <div class="step" data-step="3"><span class="num">3</span><div><b>Conferir mapeamento</b><small>filial × operação</small></div></div>
+    <div class="step" data-step="4"><span class="num">4</span><div><b>Corrigir alertas</b><small>duplicidades, sem ID…</small></div></div>
+    <div class="step" data-step="5"><span class="num">5</span><div><b>Analisar &amp; exportar</b><small>painel + planilhas</small></div></div>
+  </div>
+
   <div class="grid-inputs">
     <!-- FONTE A -->
     <div class="panel panel-a">
       <div class="panel-head">
-        <span class="tag tag-a">FONTE A</span><h2>Resumos do dia (previsto)</h2>
+        <span class="tag tag-a">FONTE A</span><h2>Previsto / referência</h2>
         <div class="mode" id="modeA">
           <button data-m="paste" class="active">Colar texto</button>
-          <button data-m="file">Planilha (.xlsx)</button>
+          <button data-m="file">Arquivo</button>
         </div>
-        <div class="sub">Cole o texto com um ou vários "📊 Resumo do dia — dd/mm" — o período é detectado automaticamente.</div>
+        <div class="sub">Cole os "📊 Resumo do dia — dd/mm" (vários dias de uma vez) ou envie uma base TXT/CSV/XLS/XLSX.</div>
       </div>
       <div class="panel-body">
         <div data-view="a-paste">
-          <textarea id="textA" placeholder="📊 *Resumo do dia — 01/07 qua (SVC)*&#10;&#10;*SMG3 - Pouso Alegre*&#10;Volume previsto: 38.000&#10;HC (base S&OP): 88&#10;HC (produtividade × volume): 123&#10;%ABS considerado: 0%&#10;Diaristas → MELI: 35 · ID: 0&#10;...&#10;*TOTAL diaristas → MELI: 38  ·  ID: 119*&#10;&#10;📊 *Resumo do dia — 02/07 qui (SVC)*&#10;... (cole quantos dias quiser)"></textarea>
+          <textarea id="textA" placeholder="📊 *Resumo do dia — 01/07 qua (SVC)*&#10;&#10;*SMG3 - Pouso Alegre*&#10;Volume previsto: 38.000&#10;HC (base S&OP): 88&#10;HC (produtividade × volume): 123&#10;%ABS considerado: 0%&#10;Diaristas → MELI: 35 · ID: 0&#10;...&#10;*TOTAL diaristas → MELI: 38 · ID: 119*&#10;&#10;📊 *Resumo do dia — 02/07 …*  (cole quantos dias quiser)"></textarea>
           <div class="parse-ok" id="parseInfoA"></div>
         </div>
         <div data-view="a-file" style="display:none">
           <label class="filebox" id="fileboxA">
-            <input type="file" id="fileA" accept=".xlsx,.xlsm,.xls">
-            <strong id="fileLabelA">📁 Enviar planilha da Fonte A</strong>
-            <div class="fsub" id="fileSubA">Clique ou arraste — cada aba é lida como uma filial</div>
+            <input type="file" id="fileA" accept=".xlsx,.xlsm,.xls,.csv,.txt">
+            <strong id="fileLabelA">📁 Enviar arquivo da Fonte A</strong>
+            <div class="fsub" id="fileSubA">XLSX/XLS/CSV/TXT — clique ou arraste</div>
           </label>
         </div>
-        <div class="hint">Dias repetidos no texto são detectados: vale a <b>última versão</b> colada e o painel avisa.</div>
+        <div class="hint">Cabeçalhos consecutivos (ex.: 02/07 e 03/07 seguidos) são resolvidos por <b>fila de cabeçalhos</b>: cada bloco fecha na linha <b>TOTAL</b>.</div>
       </div>
     </div>
 
     <!-- FONTE B -->
     <div class="panel panel-b">
       <div class="panel-head">
-        <span class="tag tag-b">FONTE B</span><h2>Base efetiva (solicitações)</h2>
+        <span class="tag tag-b">FONTE B</span><h2>Realizado / efetivo</h2>
         <div class="mode" id="modeB">
-          <button data-m="file" class="active">Planilha (.xlsx)</button>
+          <button data-m="file" class="active">Arquivo</button>
           <button data-m="paste">Colar texto</button>
         </div>
-        <div class="sub">Modelo: abas Pouso SVC, Pouso XD, Poços, Varginha, Divinópolis, Patos… colunas DATA · SOLICITANTE · EMPRESA · GROOT ID · NOME · CARGO · ESCALA.</div>
+        <div class="sub">Planilha com abas por filial (Pouso SVC, Pouso XD, Poços, Varginha, Divinópolis, Patos) — colunas DATA · SOLICITANTE · EMPRESA · GROOT ID · NOME · CARGO · ESCALA.</div>
       </div>
       <div class="panel-body">
         <div data-view="b-file">
           <label class="filebox" id="fileboxB">
-            <input type="file" id="fileB" accept=".xlsx,.xlsm,.xls">
-            <strong id="fileLabelB">📁 Enviar planilha da Fonte B</strong>
-            <div class="fsub" id="fileSubB">Clique ou arraste — cada aba é lida como uma filial</div>
+            <input type="file" id="fileB" accept=".xlsx,.xlsm,.xls,.csv,.txt">
+            <strong id="fileLabelB">📁 Enviar arquivo da Fonte B</strong>
+            <div class="fsub" id="fileSubB">XLSX/XLS/CSV/TXT — cada aba = uma filial</div>
           </label>
         </div>
         <div data-view="b-paste" style="display:none">
-          <textarea id="textB" style="min-height:150px" placeholder='"MÊS SOLICITAÇÃO"  "DATA SOLICITAÇÃO"  SOLICITANTE  EMPRESA DIARISTA  GROOT ID  NOME  CARGO  ESCALA  julho-26  16/07/2026  MELI  MOURA  {2220811}  Allison Batista...'></textarea>
+          <textarea id="textB" style="min-height:150px" placeholder='DATA SOLICITAÇÃO  SOLICITANTE  EMPRESA DIARISTA  GROOT ID  NOME  CARGO  ESCALA&#10;16/07/2026  ID Logistics  MOURA  {2220811}  Allison Batista  Diarista  SVC …'></textarea>
           <div class="inline-ctrl" style="margin-top:8px">
             <span>Texto colado pertence à filial:</span>
             <select id="siteSelB"></select>
+            <span>operação:</span>
+            <select id="opSelB"></select>
           </div>
         </div>
-        <div class="hint">O app remove as chaves dos <b>{GROOT ID}</b>, ignora meses fora do período da Fonte A e casa as datas por <b>dia/mês</b>.</div>
+        <div class="hint">Células vazias são preservadas antes do mapeamento; chaves de <b>{GROOT ID}</b> são removidas. Se faltar coluna obrigatória, o app avisa a aba.</div>
       </div>
     </div>
   </div>
 
   <div class="controls">
-    <div class="ctrl">
-      <label for="escalaSel">Filtro de escala (Fonte B)</label>
-      <select id="escalaSel"><option value="">Todas as escalas</option></select>
+    <div class="row">
+      <div class="ctrl"><label for="dtIni">Data inicial</label><input type="date" id="dtIni"></div>
+      <div class="ctrl"><label for="dtFim">Data final</label><input type="date" id="dtFim"></div>
+      <div class="ctrl"><label for="anoPad">Ano padrão (datas sem ano)</label><input type="number" id="anoPad" value="2026" style="min-width:110px"></div>
+      <div class="ctrl"><label for="countMode">Modo de contagem</label>
+        <select id="countMode">
+          <option value="raw">Linhas brutas</option>
+          <option value="unique">Pessoas únicas (GROOT ID)</option>
+          <option value="sane" selected>Saneada (sem duplicidade exata)</option>
+        </select>
+      </div>
+      <button class="go" id="btnGo" style="margin-left:auto">Confrontar período</button>
     </div>
-    <button class="go" id="btnGo">Confrontar período</button>
+    <div class="shortcuts" id="shortcuts">
+      <span style="font-size:11px;color:var(--ink-dim);align-self:center;margin-right:2px">Atalhos:</span>
+      <button data-sc="detected">Todo o período detectado</button>
+      <button data-sc="q1">1ª quinzena</button>
+      <button data-sc="q2">2ª quinzena</button>
+      <button data-sc="month">Mês completo</button>
+      <button data-sc="today">Um dia…</button>
+    </div>
+    <details class="adv">
+      <summary>⚙ Inteligência financeira &amp; sessão</summary>
+      <div class="cost-grid">
+        <div class="ctrl"><label>Custo diário MELI (R$)</label><input type="number" id="costMeli" value="180"></div>
+        <div class="ctrl"><label>Custo diário ID (R$)</label><input type="number" id="costId" value="165"></div>
+        <div class="ctrl"><label>Multiplicador sábado</label><input type="number" step="0.05" id="multSat" value="1.5"></div>
+        <div class="ctrl"><label>Multiplicador domingo/feriado</label><input type="number" step="0.05" id="multSun" value="2"></div>
+        <div class="ctrl"><label>Adicional noturno (%)</label><input type="number" id="addNight" value="0"></div>
+      </div>
+      <div class="hint" style="margin-top:8px">Prioridade do custo: <b>operação + dia da semana</b> → base do solicitante (MELI/ID) × multiplicador do dia. A exposição é calculada <b>por célula diária</b> — excessos e déficits nunca se compensam entre dias, origens, operações ou filiais.</div>
+      <div class="exports" style="margin-top:14px">
+        <button id="btnSaveSession">💾 Salvar sessão (navegador)</button>
+        <button id="btnExportSession">⬇ Exportar sessão (JSON)</button>
+        <label class="ghost" style="cursor:pointer;display:inline-flex;align-items:center;padding:11px 18px;border-radius:8px">⬆ Importar sessão<input type="file" id="importSession" accept=".json" style="display:none"></label>
+        <button id="btnClearSession">🗑 Limpar sessão</button>
+      </div>
+      <div class="hint" id="sessionInfo" style="margin-top:8px"></div>
+    </details>
   </div>
   <div class="err" id="errBox"></div>
 
+  <!-- AUDITORIA DE IMPORTAÇÃO -->
+  <div id="audit">
+    <div class="section-h">Auditoria da importação <span class="aside">confira antes de liberar o painel — cada número é clicável</span></div>
+    <div class="audit-grid">
+      <div class="audit-card" id="auditA"></div>
+      <div class="audit-card" id="auditB"></div>
+    </div>
+    <div class="section-h">Mapeamento detectado (aba → filial × operação) <span class="aside">corrija manualmente se necessário</span></div>
+    <div class="tbl-wrap map-tbl-wrap"><table id="mapTbl"><thead><tr>
+      <th>Origem</th><th>Aba</th><th>Filial</th><th>Operação</th><th>Registros</th><th>Confiança</th><th>Correção manual</th>
+    </tr></thead><tbody id="mapBody"></tbody></table></div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="go" id="btnConfirmMap">Confirmar mapeamento &amp; analisar</button>
+    </div>
+  </div>
+
   <!-- DASHBOARD -->
   <div id="dash">
-    <div class="dash-title">
-      <h2>Painel do confronto — período</h2>
-      <span class="meta" id="dashMeta"></span>
-      <button class="csv" id="btnCsv" style="margin-left:auto">⬇ Exportar CSV</button>
-    </div>
-    <div class="kpis" id="kpis"></div>
+    <div class="section-h">Resumo executivo <span class="aside" id="dashMeta"></span></div>
+    <div class="story" id="story"></div>
 
-    <div class="section-h">Confronto dia a dia × filial
-      <div class="view-toggle" id="viewToggle">
-        <button data-v="meli" class="active">MELI</button>
-        <button data-v="id">ID Logistics</button>
+    <div class="kpis" id="kpis" style="margin-top:12px"></div>
+
+    <div class="filters" id="filters"></div>
+
+    <div class="section-h">A × B por dia
+      <span class="badge-mode" id="modeBadge"></span>
+      <div class="view-toggle" id="viewToggle" style="margin-left:auto">
+        <button data-v="both" class="active">MELI + ID</button>
+        <button data-v="meli">MELI</button>
+        <button data-v="id">ID</button>
       </div>
     </div>
-    <div class="tbl-wrap"><table id="matrixTbl"><thead id="matrixHead"></thead><tbody id="matrixBody"></tbody></table></div>
-    <div class="hint" style="margin-top:8px">Cada célula mostra <b>Fonte A → Fonte B</b>.
-      <span class="delta d0">verde</span> bate ·
-      <span class="delta dpos">vermelho</span> Fonte B acima do previsto (custo adicional) ·
-      <span class="delta dneg">laranja</span> Fonte B abaixo do previsto ·
-      "—" sem dado. Clique no dia para abrir o detalhe completo (volume, HC, %ABS e nomes).</div>
+    <div class="tbl-wrap"><table id="dailyTbl"><thead id="dailyHead"></thead><tbody id="dailyBody"></tbody></table></div>
+    <div class="hint" style="margin-top:8px">Gap = <b>Fonte B − Fonte A</b>. <span class="gap gpos">+n</span> excedente (custo) · <span class="gap gneg">−n</span> déficit de cobertura · <span class="gap g0">0</span> conferido. Todos os dias do intervalo aparecem, mesmo sem dados. Clique no dia para abrir operação → filial.</div>
 
-    <div class="section-h">Consolidado do período por filial</div>
-    <div class="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Filial</th>
-            <th class="grp-meli">MELI · A</th><th class="grp-meli">MELI · B</th><th class="grp-meli">Δ MELI</th>
-            <th class="grp-id">ID · A</th><th class="grp-id">ID · B</th><th class="grp-id">Δ ID</th>
-            <th>Dias batendo</th><th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="consBody"></tbody>
-      </table>
+    <div class="section-h">Acumulado do período <span class="aside">visão secundária — exposição calculada célula a célula, sem compensar gaps</span>
+      <div class="view-toggle" id="accToggle" style="margin-left:auto">
+        <button data-a="operacao" class="active">Por operação</button>
+        <button data-a="filial">Por filial</button>
+        <button data-a="solicitante">Por solicitante</button>
+      </div>
     </div>
+    <div class="tbl-wrap"><table id="accTbl"><thead id="accHead"></thead><tbody id="accBody"></tbody></table></div>
+
+    <div class="section-h">Inteligência financeira</div>
+    <div id="finBlock"></div>
+
+    <div class="section-h">Comparação nominal (GROOT ID) <span class="aside" id="nominalMeta"></span></div>
+    <div id="nominalBlock"></div>
 
     <div class="section-h">Alertas de custo adicional</div>
     <div id="costAlerts"></div>
 
     <div class="section-h">Irregularidades &amp; insights</div>
     <div id="insights"></div>
+
+    <div class="section-h">Exportações</div>
+    <div class="exports">
+      <button id="btnCsv">⬇ CSV (UTF-8 BOM)</button>
+      <button id="btnXlsx">⬇ Excel (múltiplas abas)</button>
+      <button id="btnCopyExec">📋 Resumo executivo</button>
+      <button id="btnCopyDaily">📋 Resumo operacional diário</button>
+    </div>
+    <div class="hint" id="copyInfo" style="margin-top:8px"></div>
   </div>
 </div>
+
+<!-- DRAWER -->
+<div id="drawer"><div class="drawer-box">
+  <div class="drawer-head"><h3 id="drawerTitle"></h3><button id="drawerClose">✕</button></div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div></div>
+
 <footer>uso interno · roda 100% no navegador · nenhum dado sai da sua máquina</footer>
 
 <script>
-/* ================= CONFIG ================= */
-const SITES = [
-  {key:'SMG3',    label:'SMG3 - Pouso Alegre'},
-  {key:'SMG3-XD', label:'Pouso Alegre (XD)', extra:true},
-  {key:'SMG5',    label:'SMG5 - Poços de Caldas'},
-  {key:'SMG9',    label:'SMG9 - Varginha'},
-  {key:'SMG10',   label:'SMG10 - Divinópolis'},
-  {key:'SMG11',   label:'SMG11 - Patos de Minas'},
+"use strict";
+/* =========================================================================
+   CONFIG
+   ========================================================================= */
+const BRANCHES = [
+  {key:'SMG3',  label:'SMG3 - Pouso Alegre',   match:/pouso/i},
+  {key:'SMG5',  label:'SMG5 - Poços de Caldas', match:/po[cç]os/i},
+  {key:'SMG9',  label:'SMG9 - Varginha',        match:/varginha/i},
+  {key:'SMG10', label:'SMG10 - Divinópolis',    match:/div/i},
+  {key:'SMG11', label:'SMG11 - Patos de Minas',  match:/patos/i},
 ];
+const OPERACOES = ['SVC','XD','SD','Full'];
+const OP_DEFAULT_BY_BRANCH = {SMG3:'SVC',SMG5:'SVC',SMG9:'SVC',SMG10:'SVC',SMG11:'SVC'};
+const SOLIC = ['MELI','ID'];
 const MONTHS = 'janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro';
-const MONTH_RE = new RegExp('^(?:'+MONTHS+')-\\d{2}$','i');
-const DATE_RE  = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
-const MES_NOME = ['','janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const MONTH_RE = new RegExp('^(?:'+MONTHS+')-\\d{2,4}$','i');
+const DATE_RE  = /^\d{1,2}\/\d{1,2}\/\d{2,4}$/;
+const WD = ['dom','seg','ter','qua','qui','sex','sáb'];
+const COL_ALIASES = {
+  data:      [/^data\s*solicita/i,/^data$/i,/data/i],
+  solicitante:[/^solicitante$/i,/solicitante/i],
+  empresa:   [/empresa\s*diarista/i,/^empresa$/i,/empresa/i,/fornecedor/i],
+  grootId:   [/groot\s*id/i,/^groot$/i,/^id$/i],
+  nome:      [/^nome$/i,/colaborador/i,/nome/i],
+  cargo:     [/^cargo$/i,/fun[cç][aã]o/i,/cargo/i],
+  escala:    [/^escala$/i,/turno/i,/escala/i],
+  operacao:  [/opera[cç][aã]o/i,/^oper$/i],
+  filial:    [/^filial$/i,/unidade/i,/^site$/i,/^hub$/i,/^cd$/i],
+};
 
-let fileRecsA = null;
-let fileRecsB = null;
-let lastResult = null; // p/ export CSV e re-render do toggle
+/* =========================================================================
+   STATE
+   ========================================================================= */
+let fileSrcA = null;   // {kind, records|blocks..., audit, mapping, fileName}
+let fileSrcB = null;
+let mapOverrides = {}; // "origem|aba" -> {filialKey, operacao}
+let lastResult = null;
 
-/* ================= HELPERS ================= */
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
 const $ = s => document.getElementById(s);
 function pad(n){return String(n).padStart(2,'0')}
-function serialToDate(n){
+function escapeHtml(v){
+  return String(v==null?'':v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function isoOf(y,m,d){ return y+'-'+pad(m)+'-'+pad(d); }
+function fmtBR(iso){ if(!iso) return '—'; const p=iso.split('-'); return pad(p[2])+'/'+pad(p[1]); }
+function fmtBRfull(iso){ if(!iso) return '—'; const p=iso.split('-'); return pad(p[2])+'/'+pad(p[1])+'/'+p[0]; }
+function weekdayOf(iso){ const p=iso.split('-').map(Number); return new Date(Date.UTC(p[0],p[1]-1,p[2])).getUTCDay(); }
+function wdLabel(iso){ return WD[weekdayOf(iso)]; }
+function serialToISO(n, defYear){
   const d = new Date(Math.round((n - 25569) * 86400 * 1000));
-  return {dd:d.getUTCDate(), mm:d.getUTCMonth()+1, yy:d.getUTCFullYear()};
+  return isoOf(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate());
 }
-function normSolic(s){
-  s = (s||'').trim().toLowerCase();
-  if(!s) return 'VAZIO';
-  if(s.includes('meli')) return 'MELI';
-  if(s.includes('id')||s.includes('log')) return 'ID';
-  return 'OUTRO';
-}
-function cleanId(v){ return String(v||'').replace(/[{}\s]/g,''); }
-function cleanNome(v){ return String(v||'').replace(/^\d+\.\s*/,'').trim(); }
-function filialFromSheet(name){
-  const n = name.toLowerCase();
-  if(/pouso/.test(n)) return /xd/.test(n) ? 'SMG3-XD' : 'SMG3';
-  if(/po[cç]os/.test(n)) return 'SMG5';
-  if(/varginha/.test(n)) return 'SMG9';
-  if(/div/.test(n)) return 'SMG10';
-  if(/patos/.test(n)) return 'SMG11';
-  return name.trim(); // aba não mapeada vira sua própria filial
-}
-function filialLabel(key){
-  const s = SITES.find(x=>x.key===key);
-  return s ? s.label : key;
+function parseDateToISO(v, defYear){
+  if(v==null||v==='') return null;
+  if(typeof v==='number' && isFinite(v)) return serialToISO(v, defYear);
+  if(v instanceof Date) return isoOf(v.getFullYear(), v.getMonth()+1, v.getDate());
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return isoOf(+m[1],+m[2],+m[3]);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if(m){ let y = m[3]?+m[3]:defYear; if(y<100) y+=2000; return isoOf(y,+m[2],+m[1]); }
+  return null;
 }
 function parseNum(s){
   s = String(s==null?'':s).replace(/\*/g,'').trim();
@@ -312,574 +460,1212 @@ function parseNum(s){
   const n = parseInt(s.replace(/\./g,'').split(',')[0],10);
   return isNaN(n) ? null : n;
 }
-function fmtNum(n){ return n==null ? '—' : n.toLocaleString('pt-BR'); }
-function dkSort(a,b){
-  const [da,ma]=a.split('/').map(Number), [db,mb]=b.split('/').map(Number);
-  return (ma-mb) || (da-db);
+function cleanId(v){ return String(v==null?'':v).replace(/[{}\s]/g,'').trim(); }
+function cleanNome(v){ return String(v==null?'':v).replace(/^\d+\.\s*/,'').trim(); }
+function fmtInt(n){ return (n==null?0:n).toLocaleString('pt-BR'); }
+function fmtMoney(n){ return 'R$ '+(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function branchLabel(key){ const b=BRANCHES.find(x=>x.key===key); return b?b.label:(key||'—'); }
+
+/* =========================================================================
+   DETECTORES centralizados
+   ========================================================================= */
+function detectBranch(name){
+  const n = String(name||'');
+  for(const b of BRANCHES){ if(b.match.test(n)) return b.key; }
+  return null;
+}
+// Operação: prioridade OPERACAO col > ESCALA explícita > nome da aba > regra da filial > manual > "Não classificado"
+function detectOperation(fields, sheetName, manualOp){
+  const tryVal = v => {
+    const s = String(v||'').trim();
+    for(const op of OPERACOES){ if(new RegExp('(^|\\W)'+op+'($|\\W)','i').test(s)) return op; }
+    return null;
+  };
+  let op = tryVal(fields.operacao);                 if(op) return {op, conf:'Alta', src:'coluna OPERAÇÃO'};
+  op = tryVal(fields.escala);                        if(op) return {op, conf:'Alta', src:'coluna ESCALA'};
+  const sn = String(sheetName||'');
+  for(const o of OPERACOES){ if(new RegExp('(^|\\W)'+o+'($|\\W)','i').test(sn)) return {op:o, conf:'Alta', src:'nome da aba'}; }
+  const bKey = detectBranch(sheetName) || detectBranch(fields.filial);
+  if(bKey && OP_DEFAULT_BY_BRANCH[bKey]) return {op:OP_DEFAULT_BY_BRANCH[bKey], conf:'Média', src:'regra da filial'};
+  if(manualOp) return {op:manualOp, conf:'Média', src:'manual'};
+  return {op:'Não classificado', conf:'Baixa', src:'—'};
+}
+// Turno: AM/PM/faixa horária — NUNCA operação
+function detectShift(escala){
+  const s = String(escala||'').trim();
+  if(!s) return '';
+  if(/^AM$/i.test(s)) return 'AM';
+  if(/^PM$/i.test(s)) return 'PM';
+  if(/\bAM\b/i.test(s) && !/\bPM\b/i.test(s)) return 'AM';
+  if(/\bPM\b/i.test(s) && !/\bAM\b/i.test(s)) return 'PM';
+  if(/\d{1,2}[:h]\d{2}/.test(s) || /\d{1,2}\s*(as|às|à|a)\s*\d/i.test(s)) return s; // faixa horária
+  if(OPERACOES.some(o=>new RegExp('^'+o+'$','i').test(s))) return ''; // é operação, não turno
+  return '';
+}
+function normSolic(v){
+  const s = String(v||'').trim().toLowerCase();
+  if(!s) return 'VAZIO';
+  if(s.includes('meli')) return 'MELI';
+  if(s.includes('id')||s.includes('log')) return 'ID';
+  return 'OUTRO';
 }
 
-/* ================= PARSER: RESUMOS (multi-dia) ================= */
-function parseResumoMulti(text){
-  const days = new Map(); // 'dd/mm' -> day obj
-  let cur = null, curSite = null;
-  for(let raw of text.split(/\r?\n/)){
+/* =========================================================================
+   NORMALIZAÇÃO de registro tabular
+   ========================================================================= */
+function normalizeRecord(fields, ctx, defYear){
+  const iso = parseDateToISO(fields.data, defYear);
+  const filialKey = detectBranch(ctx.aba) || detectBranch(fields.filial) || ctx.manualBranch || null;
+  const opInfo = detectOperation(fields, ctx.aba, ctx.manualOp);
+  return {
+    data: iso,
+    filialKey,
+    filial: branchLabel(filialKey) || String(fields.filial||ctx.aba||'—'),
+    operacao: opInfo.op,
+    opConf: opInfo.conf,
+    turno: detectShift(fields.escala),
+    solicitante: normSolic(fields.solicitante),
+    solicitanteRaw: String(fields.solicitante||'').trim(),
+    empresaDiarista: String(fields.empresa||'').trim(),
+    grootId: cleanId(fields.grootId),
+    nome: cleanNome(fields.nome),
+    cargo: String(fields.cargo||'').trim(),
+    escala: String(fields.escala||'').trim(),
+    origem: ctx.origem,
+    arquivo: ctx.arquivo||'',
+    aba: ctx.aba||'',
+    linha: ctx.linha||0,
+  };
+}
+
+/* =========================================================================
+   PARSER: RESUMO multi-dia (fila de cabeçalhos + fecho por TOTAL)
+   ========================================================================= */
+function parseResumoMulti(text, defYear){
+  const norm = String(text).replace(/ /g,' ').replace(/\r/g,'');
+  const lines = norm.split('\n');
+  const headerRe = /Resumo do dia\s*[—–\-]\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/i;
+  const scopeRe  = /\(\s*([A-Za-z]{2,6})\s*\)/;
+  const siteRe   = /^\*?\s*(SMG\d+)\s*[-–]\s*([^*]+?)\s*\*?$/i;
+  const totalRe  = /TOTAL[^0-9]*MELI[^0-9]*?(\d+)[^0-9]+ID[^0-9]*?(\d+)/i;
+
+  const pending = [];   // headers queued, not yet consumed by a block
+  let current = null, curSite = null;
+  const blocks = [], headers = [];
+
+  function newBlock(h){ return {header:h, iso:h?h.iso:null, key:h?h.key:'??/??', scope:h?h.scope:null, sites:{}, total:null, orphan:!h}; }
+  function finalize(){ if(current){ blocks.push(current); current=null; curSite=null; } }
+
+  for(const raw of lines){
     const ln = raw.trim();
     if(!ln) continue;
-    let m = ln.match(/Resumo do dia\s*[—–-]\s*(\d{1,2})\/(\d{1,2})(?:\s+([a-záéíóúãõç]{3}))?/i);
+    let m = ln.match(headerRe);
     if(m){
-      const key = pad(m[1])+'/'+pad(m[2]);
-      const mScope = ln.match(/\(([A-Za-z]{2,6})\)/);
-      if(days.has(key)){
-        cur = days.get(key); cur.blocks++;
-      } else {
-        cur = {key, dd:+m[1], mm:+m[2], wd:(m[3]||'').toLowerCase(), scope:mScope?mScope[1].toUpperCase():null,
-               sites:{}, total:null, blocks:1, totalCount:0, overwrites:0};
-        days.set(key, cur);
-      }
-      curSite = null; continue;
-    }
-    if(!cur) continue;
-    m = ln.match(/TOTAL[^0-9]*MELI[^0-9]*?(\d+)[^0-9]+ID[^0-9]*?(\d+)/i);
-    if(m){ if(cur.total) cur.totalCount++; cur.total = {meli:+m[1], id:+m[2]}; curSite = null; continue; }
-    m = ln.match(/^\*?\s*(SMG\d+)\s*-\s*([^*]+?)\s*\*?$/i);
-    if(m && !/total/i.test(ln)){
-      curSite = m[1].toUpperCase();
-      if(!cur.sites[curSite]) cur.sites[curSite] = {label:m[2].trim(), vol:null, hcSop:null, hcProd:null, abs:null, meli:null, id:null};
+      const dd=+m[1], mm=+m[2]; let yy=m[3]?+m[3]:defYear; if(yy<100) yy+=2000;
+      const scope=(ln.match(scopeRe)||[])[1];
+      const h={dd,mm,yy,iso:isoOf(yy,mm,dd),key:pad(dd)+'/'+pad(mm),scope:scope?scope.toUpperCase():null,raw:ln};
+      headers.push(h); pending.push(h);
       continue;
     }
-    if(!curSite) continue;
-    const st = cur.sites[curSite];
-    m = ln.match(/Volume previsto\s*:\s*(.+)$/i);          if(m){ st.vol = parseNum(m[1]); continue; }
-    m = ln.match(/HC\s*\(base[^)]*\)\s*:\s*(.+)$/i);       if(m){ st.hcSop = parseNum(m[1]); continue; }
-    m = ln.match(/HC\s*\(produtividade[^)]*\)\s*:\s*(.+)$/i); if(m){ st.hcProd = parseNum(m[1]); continue; }
-    m = ln.match(/%?\s*ABS considerado\s*:\s*(.+)$/i);     if(m){ st.abs = m[1].replace(/\*/g,'').trim(); continue; }
-    m = ln.match(/Diaristas[^0-9—–-]*MELI\s*:?\s*(\d+)[^0-9]+ID\s*:?\s*(\d+)/i);
-    if(m){ if(st.meli!=null) cur.overwrites++; st.meli = +m[1]; st.id = +m[2]; continue; }
-  }
-  return days;
-}
-function isResumoText(t){ return /Resumo do dia/i.test(t) || /Diaristas\s*(→|->|—)?\s*MELI\s*:/i.test(t); }
-
-/* ================= PARSER: TEXTO DE BASE ================= */
-function parseBaseText(raw, filialKey){
-  let cells = [];
-  raw.replace(/\r/g,'').split(/[\t\n]+/).forEach(c=>{
-    c = c.trim(); if(!c) return;
-    const m = c.match(new RegExp('^(.*\\S)\\s+((?:'+MONTHS+')-\\d{2})$','i'));
-    if(m && !MONTH_RE.test(c)){ cells.push(m[1]); cells.push(m[2]); }
-    else cells.push(c);
-  });
-  const recs = [];
-  for(let i=0;i<cells.length;i++){
-    if(!DATE_RE.test(cells[i])) continue;
-    const p = cells[i].split('/').map(Number);
-    const f = [];
-    for(let j=i+1; j<cells.length && f.length<6; j++){
-      if(DATE_RE.test(cells[j]) || MONTH_RE.test(cells[j])) break;
-      f.push(cells[j]);
+    m = ln.match(totalRe);
+    if(m){
+      if(!current && pending.length) current=newBlock(pending.shift());
+      if(current){ current.total={meli:+m[1],id:+m[2]}; finalize(); }
+      continue;
     }
-    if(f.length>=4){
-      recs.push({filial:filialKey, dd:p[0], mm:p[1], yy:p[2], dkey:pad(p[0])+'/'+pad(p[1]),
-        solic:normSolic(f[0]), empresa:f[1]||'', id:cleanId(f[2]),
-        nome:cleanNome(f[3]), cargo:f[4]||'', escala:(f[5]||'').trim(), origem:'texto'});
+    m = ln.match(siteRe);
+    if(m && !/total/i.test(ln)){
+      if(!current) current = pending.length ? newBlock(pending.shift()) : newBlock(null);
+      curSite = m[1].toUpperCase();
+      if(!current.sites[curSite]) current.sites[curSite]={key:curSite,label:m[2].trim(),vol:null,hcSop:null,hcProd:null,abs:null,meli:null,id:null};
+      continue;
+    }
+    if(current && curSite){
+      const st=current.sites[curSite]; let mm2;
+      if(mm2=ln.match(/Volume previsto\s*:\s*(.+)$/i)) st.vol=parseNum(mm2[1]);
+      else if(mm2=ln.match(/HC\s*\(base[^)]*\)\s*:\s*(.+)$/i)) st.hcSop=parseNum(mm2[1]);
+      else if(mm2=ln.match(/HC\s*\(produt[^)]*\)\s*:\s*(.+)$/i)) st.hcProd=parseNum(mm2[1]);
+      else if(mm2=ln.match(/ABS considerado\s*:\s*(.+)$/i)) st.abs=mm2[1].replace(/\*/g,'').trim();
+      else if(mm2=ln.match(/Diaristas[^0-9]*MELI\s*:?\s*(\d+)[^0-9]+ID\s*:?\s*(\d+)/i)){ st.meli=+mm2[1]; st.id=+mm2[2]; }
     }
   }
-  return recs;
+  finalize();
+  return {blocks, headers, emptyHeaders:pending.slice()};
 }
 
-/* ================= PARSER: XLSX (aba = filial) ================= */
-function parseWorkbook(wb, tagOrigem){
-  const recs = [];
-  wb.SheetNames.forEach(sn=>{
-    const filial = filialFromSheet(sn);
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, raw:true, defval:''});
-    if(!rows.length) return;
-    let hi = rows.findIndex(r => r.some(c => /groot/i.test(String(c))) );
-    if(hi<0) hi = 0;
-    const head = rows[hi].map(c=>String(c).toLowerCase().replace(/\n/g,' '));
-    const col = re => head.findIndex(h=>re.test(h));
-    const cData=col(/^data/), cSolic=col(/solicitante/), cEmp=col(/empresa/),
-          cId=col(/groot/), cNome=col(/nome/), cCargo=col(/cargo/), cEsc=col(/escala/);
-    for(let r=hi+1;r<rows.length;r++){
-      const row = rows[r]; if(!row || !row.length) continue;
-      let dv = row[cData]; if(dv===''||dv==null) continue;
-      let d;
-      if(typeof dv==='number') d = serialToDate(dv);
-      else if(dv instanceof Date) d = {dd:dv.getDate(), mm:dv.getMonth()+1, yy:dv.getFullYear()};
-      else { const m=String(dv).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(!m) continue; d = {dd:+m[1], mm:+m[2], yy:+m[3]}; }
-      const nome = cleanNome(row[cNome]);
-      if(!nome) continue;
-      recs.push({filial, dd:d.dd, mm:d.mm, yy:d.yy, dkey:pad(d.dd)+'/'+pad(d.mm),
-        solic:normSolic(String(row[cSolic]||'')), empresa:String(row[cEmp]||'').trim(),
-        id:cleanId(row[cId]), nome, cargo:String(row[cCargo]||'').trim(), escala:String(row[cEsc]||'').trim(),
-        origem:tagOrigem+':'+sn});
-    }
-  });
-  return recs;
-}
-
-/* ================= MODOS (colar × planilha) ================= */
-function setupMode(modeEl, prefix){
-  modeEl.querySelectorAll('button').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      modeEl.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      document.querySelectorAll(`[data-view^="${prefix}-"]`).forEach(v=>{
-        v.style.display = v.dataset.view === prefix+'-'+b.dataset.m ? '' : 'none';
+// blocos -> células planejadas com detecção de duplicidade/conflito
+function resumoToCells(parsed){
+  const map = new Map(); // iso|op|filialKey|solic -> {count, meta, sources}
+  const conflicts = [], identicalDups = [], orphanBlocks = [];
+  const dayMeta = new Map(); // iso -> {key,scope,wd, totalDeclared, sitesTotal, blocks}
+  parsed.blocks.forEach(b=>{
+    if(b.orphan){ orphanBlocks.push(b); return; }
+    const op = b.scope || 'Não classificado';
+    const dm = dayMeta.get(b.iso) || {iso:b.iso,scope:op,blocks:0,totals:[]};
+    dm.blocks++; if(b.total) dm.totals.push(b.total);
+    dayMeta.set(b.iso, dm);
+    Object.values(b.sites).forEach(st=>{
+      SOLIC.forEach(sol=>{
+        const val = sol==='MELI'?st.meli:st.id;
+        if(val==null) return;
+        const key = b.iso+'|'+op+'|'+st.key+'|'+sol;
+        const meta = {vol:st.vol,hcSop:st.hcSop,hcProd:st.hcProd,abs:st.abs};
+        if(map.has(key)){
+          const prev = map.get(key);
+          if(prev.count===val){ identicalDups.push({key,val}); } // ignora idêntico
+          else conflicts.push({key,iso:b.iso,op,filialKey:st.key,sol,prev:prev.count,novo:val});
+        } else {
+          map.set(key,{data:b.iso,operacao:op,filialKey:st.key,solicitante:sol,count:val,meta,sources:[b.key]});
+        }
       });
     });
   });
+  return {cells:[...map.values()], conflicts, identicalDups, orphanBlocks, dayMeta, headers:parsed.headers, emptyHeaders:parsed.emptyHeaders};
+}
+
+/* =========================================================================
+   PARSER: XLSX / CSV -> registros normalizados
+   ========================================================================= */
+function mapColumns(headerRow){
+  const head = headerRow.map(c=>String(c==null?'':c).toLowerCase().replace(/\n/g,' ').trim());
+  const found = {};
+  for(const field in COL_ALIASES){
+    let idx = -1;
+    for(const re of COL_ALIASES[field]){ idx = head.findIndex(h=>re.test(h)); if(idx>=0) break; }
+    found[field]=idx;
+  }
+  return found;
+}
+function parseSheetRows(rows, ctx, defYear, audit){
+  // localizar cabeçalho real
+  let hi = rows.findIndex(r => r.some(c => /groot/i.test(String(c)) || /data\s*solicita/i.test(String(c))));
+  if(hi<0) hi = rows.findIndex(r => r.some(c => /(solicitante|nome|escala)/i.test(String(c))));
+  if(hi<0) hi = 0;
+  const col = mapColumns(rows[hi]);
+  const recs = [];
+  if(col.data<0){
+    audit.missingCols.push(`Aba ${ctx.aba||'(colado)'}: coluna DATA não encontrada.`);
+    return recs;
+  }
+  for(let r=hi+1;r<rows.length;r++){
+    const row = rows[r]||[];
+    const nonEmpty = row.filter(c=>String(c==null?'':c).trim()!=='').length;
+    if(nonEmpty===0) continue; // linha totalmente vazia
+    const fields = {
+      data: col.data>=0?row[col.data]:'', solicitante: col.solicitante>=0?row[col.solicitante]:'',
+      empresa: col.empresa>=0?row[col.empresa]:'', grootId: col.grootId>=0?row[col.grootId]:'',
+      nome: col.nome>=0?row[col.nome]:'', cargo: col.cargo>=0?row[col.cargo]:'',
+      escala: col.escala>=0?row[col.escala]:'', operacao: col.operacao>=0?row[col.operacao]:'',
+      filial: col.filial>=0?row[col.filial]:'',
+    };
+    // linha fantasma: só ESCALA preenchida
+    const meaningful = ['data','solicitante','empresa','grootId','nome','cargo'].some(k=>String(fields[k]||'').trim()!=='');
+    if(!meaningful && String(fields.escala||'').trim()!==''){ audit.rejected.push({...ctx, linha:r+1, motivo:'linha fantasma (só ESCALA)', dump:row.join(' | ')}); continue; }
+    const rec = normalizeRecord(fields, {...ctx, linha:r+1}, defYear);
+    if(!rec.data){ audit.rejected.push({...ctx, linha:r+1, motivo:'data inválida/ausente', dump:row.join(' | ')}); continue; }
+    if(!rec.nome && !rec.grootId){ audit.rejected.push({...ctx, linha:r+1, motivo:'sem NOME e sem GROOT ID', dump:row.join(' | ')}); continue; }
+    recs.push(rec);
+  }
+  return recs;
+}
+function parseWorkbook(wb, origem, fileName, defYear){
+  const audit = {rows:0, rejected:[], missingCols:[]};
+  const recs = [];
+  const mapping = [];
+  wb.SheetNames.forEach(sn=>{
+    const arr = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, raw:true, defval:''});
+    audit.rows += Math.max(0, arr.length-1);
+    const before = recs.length;
+    const sheetRecs = parseSheetRows(arr, {origem, arquivo:fileName, aba:sn}, defYear, audit);
+    recs.push(...sheetRecs);
+    // mapping row (confiança pela operação dominante)
+    const bKey = detectBranch(sn);
+    const opCounts = {};
+    sheetRecs.forEach(r=>{opCounts[r.operacao]=(opCounts[r.operacao]||0)+1;});
+    const domOp = Object.entries(opCounts).sort((a,b)=>b[1]-a[1])[0];
+    let conf='Baixa';
+    if(/\b(SVC|XD|SD|Full)\b/i.test(sn)) conf='Alta';
+    else if(bKey) conf='Média';
+    if(domOp && domOp[0]==='Não classificado') conf='Baixa';
+    mapping.push({origem, aba:sn, filialKey:bKey, filial:branchLabel(bKey), operacao:domOp?domOp[0]:'Não classificado',
+      opMix:Object.keys(opCounts).length>1, conf, registros:recs.length-before});
+  });
+  return {kind:'records', records:recs, audit, mapping, fileName};
+}
+function parseDelimited(text, origem, fileName, defYear){
+  // CSV/TSV/TXT tabular. Detecta delimitador.
+  const norm = String(text).replace(/ /g,' ').replace(/\r/g,'');
+  const firstLines = norm.split('\n').slice(0,10).join('\n');
+  let delim = '\t';
+  if(firstLines.indexOf('\t')<0){
+    const semi = (firstLines.match(/;/g)||[]).length, comma=(firstLines.match(/,/g)||[]).length;
+    delim = semi>=comma ? ';' : ',';
+  }
+  const rows = csvParse(norm, delim);
+  const audit = {rows:Math.max(0,rows.length-1), rejected:[], missingCols:[]};
+  const recs = parseSheetRows(rows, {origem, arquivo:fileName, aba:''}, defYear, audit);
+  const mapping = [{origem, aba:'(arquivo texto)', filialKey:null, filial:'—', operacao:'por linha', opMix:true, conf:'Média', registros:recs.length}];
+  return {kind:'records', records:recs, audit, mapping, fileName};
+}
+// CSV robusto (aspas, ; , quebras)
+function csvParse(text, delim){
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; }
+      else cur+=c;
+    } else {
+      if(c==='"') q=true;
+      else if(c===delim){ row.push(cur); cur=''; }
+      else if(c==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+      else cur+=c;
+    }
+  }
+  if(cur!==''||row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r=>r.length>1 || (r[0]&&r[0].trim()!==''));
+}
+
+/* =========================================================================
+   PARSER: texto tabular colado (preserva células vazias)
+   ========================================================================= */
+function parsePastedTable(raw, ctx, defYear){
+  const audit = {rows:0, rejected:[], missingCols:[]};
+  const norm = String(raw).replace(/ /g,' ').replace(/\r/g,'');
+  const hasTab = norm.indexOf('\t')>=0;
+  const hasNL  = /\n/.test(norm.trim().replace(/^[^\n]*\n?/,'')); // >1 linha
+  if(hasTab || hasNL){
+    const delim = hasTab?'\t':(norm.indexOf(';')>=0?';':',');
+    const rows = csvParse(norm, delim);
+    audit.rows = Math.max(0, rows.length-1);
+    const recs = parseSheetRows(rows, ctx, defYear, audit);
+    return {kind:'records', records:recs, audit, mapping:[{origem:ctx.origem,aba:ctx.aba||'(colado)',filialKey:ctx.manualBranch,filial:branchLabel(ctx.manualBranch),operacao:ctx.manualOp||'—',opMix:false,conf:'Média',registros:recs.length}], fileName:'(texto colado)'};
+  }
+  // tudo numa linha só: quebra por token de data
+  let cells=[];
+  norm.split(/[\t\n]+/).forEach(c=>{
+    c=c.trim(); if(!c) return;
+    const m=c.match(new RegExp('^(.*\\S)\\s+((?:'+MONTHS+')-\\d{2,4})$','i'));
+    if(m && !MONTH_RE.test(c)){ cells.push(m[1]); cells.push(m[2]); } else cells.push(c);
+  });
+  const recs=[];
+  for(let i=0;i<cells.length;i++){
+    if(!DATE_RE.test(cells[i])) continue;
+    const f=[];
+    for(let j=i+1;j<cells.length && f.length<6;j++){
+      if(DATE_RE.test(cells[j])||MONTH_RE.test(cells[j])) break;
+      f.push(cells[j]);
+    }
+    if(f.length>=3){
+      audit.rows++;
+      const rec=normalizeRecord({data:cells[i],solicitante:f[0],empresa:f[1],grootId:f[2],nome:f[3],cargo:f[4],escala:f[5],operacao:'',filial:''},
+        {...ctx, linha:0}, defYear);
+      if(rec.data && (rec.nome||rec.grootId)) recs.push(rec);
+    }
+  }
+  return {kind:'records', records:recs, audit, mapping:[{origem:ctx.origem,aba:'(colado)',filialKey:ctx.manualBranch,filial:branchLabel(ctx.manualBranch),operacao:ctx.manualOp||'—',opMix:false,conf:'Média',registros:recs.length}], fileName:'(texto colado)'};
+}
+
+/* =========================================================================
+   AGREGAÇÃO registros -> células (por modo de contagem)
+   ========================================================================= */
+function aggregateToCells(records, mode){
+  const groups = new Map();
+  records.forEach(r=>{
+    const sol = (r.solicitante==='MELI'||r.solicitante==='ID')?r.solicitante:r.solicitante; // mantém VAZIO/OUTRO à parte
+    const key = r.data+'|'+r.operacao+'|'+(r.filialKey||r.filial)+'|'+sol;
+    (groups.get(key)||groups.set(key,[]).get(key)).push(r);
+  });
+  const cells=[];
+  groups.forEach((rs,key)=>{
+    const p=key.split('|');
+    let count;
+    if(mode==='raw') count=rs.length;
+    else if(mode==='unique'){
+      const ids=new Set(), noId=[]; rs.forEach(r=>{ if(r.grootId) ids.add(r.grootId); else noId.push(r); });
+      count=ids.size+noId.length;
+    } else { // sane: remove duplicata exata (data+op+fil+solic+id+nome)
+      const seen=new Set(); count=0;
+      rs.forEach(r=>{ const k=r.grootId+'#'+r.nome.toLowerCase(); if(r.grootId||r.nome){ if(!seen.has(k)){seen.add(k);count++;} } else count++; });
+    }
+    cells.push({data:p[0], operacao:p[1], filialKey:p[2], solicitante:p[3], count, recs:rs});
+  });
+  return cells;
+}
+
+/* =========================================================================
+   VALIDAÇÃO da importação (auditoria)
+   ========================================================================= */
+function validateImport(src, mode){
+  if(!src) return null;
+  if(src.kind==='resumo'){
+    const R = src.resumo;
+    const daysComplete = [...R.dayMeta.values()].filter(d=>d.blocks>0).length;
+    const combos = src.cells.length;
+    return {kind:'resumo', headers:R.headers.length, daysComplete, empty:R.emptyHeaders.length,
+      dupDays:[...R.dayMeta.values()].filter(d=>d.blocks>1).length, conflicts:R.conflicts, identicalDups:R.identicalDups.length,
+      combos, orphan:R.orphanBlocks.length};
+  }
+  const recs = src.records;
+  const raw = recs.length;
+  const idSet = new Set(recs.filter(r=>r.grootId).map(r=>r.grootId));
+  const noId = recs.filter(r=>!r.grootId);
+  const unique = idSet.size + noId.length;
+  // duplicidades exatas
+  const seen = new Set(); let sane=0; const dupExact=[];
+  recs.forEach(r=>{ const k=r.data+'|'+r.operacao+'|'+r.filialKey+'|'+r.solicitante+'|'+r.grootId+'#'+r.nome.toLowerCase();
+    if(seen.has(k)) dupExact.push(r); else {seen.add(k); sane++;} });
+  const notClassified = recs.filter(r=>r.operacao==='Não classificado');
+  return {kind:'records', raw, unique, sane, dupExact:dupExact.length, dupExactRecs:dupExact,
+    noId:noId.length, noIdRecs:noId, notClassified:notClassified.length, notClassifiedRecs:notClassified,
+    rejected:src.audit.rejected.length, rejectedRecs:src.audit.rejected, missingCols:src.audit.missingCols};
+}
+
+/* =========================================================================
+   RANGE de datas
+   ========================================================================= */
+function buildDateRange(iniISO, fimISO){
+  const out=[]; if(!iniISO||!fimISO) return out;
+  let a=new Date(iniISO+'T00:00:00Z'), b=new Date(fimISO+'T00:00:00Z');
+  if(a>b){ const t=a;a=b;b=t; }
+  for(let d=new Date(a); d<=b; d.setUTCDate(d.getUTCDate()+1))
+    out.push(isoOf(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()));
+  return out;
+}
+
+/* =========================================================================
+   MODOS / UPLOADS / SELETORES
+   ========================================================================= */
+function setupMode(modeEl, prefix){
+  modeEl.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    modeEl.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll(`[data-view^="${prefix}-"]`).forEach(v=>{
+      v.style.display = v.dataset.view===prefix+'-'+b.dataset.m?'':'none';
+    });
+    markSteps();
+  }));
 }
 setupMode($('modeA'),'a'); setupMode($('modeB'),'b');
-function activeMode(modeEl){ return modeEl.querySelector('button.active').dataset.m; }
+const activeMode = el => el.querySelector('button.active').dataset.m;
 
-/* ================= UPLOADS ================= */
-function bindFile(boxId, inputId, labelId, subId, onLoaded){
-  const box = $(boxId);
-  $(inputId).addEventListener('change', e=>{ if(e.target.files[0]) read(e.target.files[0]); });
+function readFileSource(file, origem, cb){
+  const defYear = +$('anoPad').value||2026;
+  const name = file.name, ext=(name.split('.').pop()||'').toLowerCase();
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      let src;
+      if(ext==='csv'||ext==='txt'){
+        src = parseDelimited(ev.target.result, origem, name, defYear);
+      } else {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array', cellDates:true});
+        src = parseWorkbook(wb, origem, name, defYear);
+      }
+      cb(src, name);
+    }catch(err){ showErr('Não consegui ler o arquivo ('+name+'): '+err.message); }
+  };
+  if(ext==='csv'||ext==='txt') reader.readAsText(file,'UTF-8');
+  else reader.readAsArrayBuffer(file);
+}
+function bindFile(boxId, inputId, labelId, subId, origem, onLoaded){
+  const box=$(boxId);
+  $(inputId).addEventListener('change',e=>{ if(e.target.files[0]) go(e.target.files[0]); });
   ['dragover','dragenter'].forEach(ev=>box.addEventListener(ev,e=>{e.preventDefault();box.classList.add('drag')}));
   ['dragleave','drop'].forEach(ev=>box.addEventListener(ev,e=>{e.preventDefault();box.classList.remove('drag')}));
-  box.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) read(f); });
-  function read(file){
-    const reader = new FileReader();
-    reader.onload = ev=>{
-      try{
-        const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
-        const recs = parseWorkbook(wb, boxId==='fileboxA'?'A':'B');
-        box.classList.add('loaded');
-        $(labelId).textContent = '✅ ' + file.name;
-        const filiais = [...new Set(recs.map(r=>r.filial))];
-        $(subId).textContent = recs.length + ' registros · ' + filiais.length + ' filiais: ' + filiais.map(filialLabel).join(', ');
-        onLoaded(recs);
-        refreshEscalas();
-      }catch(err){ showErr('Não consegui ler a planilha: '+err.message); }
-    };
-    reader.readAsArrayBuffer(file);
-  }
+  box.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)go(f);});
+  function go(file){ readFileSource(file, origem, (src,name)=>{
+    box.classList.add('loaded'); $(labelId).textContent='✅ '+name;
+    const fils=[...new Set(src.records.map(r=>r.filialKey||r.filial))];
+    $(subId).textContent = src.records.length+' registros · '+src.mapping.length+' aba(s) · filiais: '+fils.map(branchLabel).join(', ');
+    onLoaded(src); autoRange(); markSteps();
+  }); }
 }
-bindFile('fileboxA','fileA','fileLabelA','fileSubA', r=>fileRecsA=r);
-bindFile('fileboxB','fileB','fileLabelB','fileSubB', r=>fileRecsB=r);
+bindFile('fileboxA','fileA','fileLabelA','fileSubA','Fonte A', s=>fileSrcA=s);
+bindFile('fileboxB','fileB','fileLabelB','fileSubB','Fonte B', s=>fileSrcB=s);
 
-/* ================= FONTES ================= */
+$('siteSelB').innerHTML = BRANCHES.map(b=>`<option value="${b.key}">${escapeHtml(b.label)}</option>`).join('');
+$('opSelB').innerHTML = OPERACOES.map(o=>`<option>${o}</option>`).join('');
+
+/* getSourceA / getSourceB unificados */
 function getSourceA(){
-  if(activeMode($('modeA'))==='file'){
-    if(!fileRecsA) return null;
-    return {type:'base', recs:fileRecsA};
+  const defYear=+$('anoPad').value||2026;
+  if(activeMode($('modeA'))==='file'){ if(!fileSrcA) return null; return {...fileSrcA, origem:'Fonte A'}; }
+  const t=$('textA').value.trim(); if(!t) return null;
+  if(/Resumo do dia/i.test(t) || /Diaristas[^\n]*MELI\s*:/i.test(t)){
+    const parsed = parseResumoMulti(t, defYear);
+    const rc = resumoToCells(parsed);
+    return {kind:'resumo', resumo:rc, cells:rc.cells, records:null, origem:'Fonte A', fileName:'(resumo colado)', mapping:[]};
   }
-  const t = $('textA').value.trim();
-  if(!t) return null;
-  if(!isResumoText(t)) return {type:'invalid'};
-  return {type:'resumo', days:parseResumoMulti(t)};
+  return {...parsePastedTable(t, {origem:'Fonte A', manualBranch:null, manualOp:null}, defYear), origem:'Fonte A'};
 }
 function getSourceB(){
-  if(activeMode($('modeB'))==='file'){
-    if(!fileRecsB) return null;
-    return {recs:fileRecsB};
-  }
-  const t = $('textB').value.trim();
-  if(!t) return null;
-  return {recs:parseBaseText(t, $('siteSelB').value || 'SMG3')};
+  const defYear=+$('anoPad').value||2026;
+  if(activeMode($('modeB'))==='file'){ if(!fileSrcB) return null; return {...fileSrcB, origem:'Fonte B'}; }
+  const t=$('textB').value.trim(); if(!t) return null;
+  return {...parsePastedTable(t, {origem:'Fonte B', manualBranch:$('siteSelB').value, manualOp:$('opSelB').value}, defYear), origem:'Fonte B'};
 }
 
-/* ================= SELETORES ================= */
-$('siteSelB').innerHTML = SITES.filter(s=>!s.extra).map(s=>`<option value="${s.key}">${s.label}</option>`).join('');
-
-function refreshEscalas(){
-  const B = getSourceB();
-  const recs = B ? B.recs : [];
-  const escs = [...new Set(recs.map(r=>r.escala).filter(Boolean))].sort();
-  const eSel = $('escalaSel'); const keep = eSel.value;
-  eSel.innerHTML = '<option value="">Todas as escalas</option>' + escs.map(e=>`<option>${e}</option>`).join('');
-  if([...eSel.options].some(o=>o.value===keep)) eSel.value = keep;
+/* período automático a partir das fontes */
+function sourceISOs(src){
+  if(!src) return [];
+  if(src.kind==='resumo') return src.cells.map(c=>c.data);
+  return src.records.map(r=>r.data).filter(Boolean);
 }
-$('textB').addEventListener('input', refreshEscalas);
-$('textA').addEventListener('input', ()=>{
-  const A = getSourceA();
-  const el = $('parseInfoA');
-  if(A && A.type==='resumo' && A.days.size){
-    const keys = [...A.days.keys()].sort(dkSort);
+function autoRange(){
+  const isos=[...sourceISOs(getSourceA()), ...sourceISOs(getSourceB())].filter(Boolean).sort();
+  if(!isos.length) return;
+  if(!$('dtIni').value) $('dtIni').value=isos[0];
+  if(!$('dtFim').value) $('dtFim').value=isos[isos.length-1];
+}
+$('textA').addEventListener('input',()=>{
+  const A=getSourceA(), el=$('parseInfoA');
+  if(A&&A.kind==='resumo'){
+    const days=[...A.resumo.dayMeta.keys()];
     el.style.display='block';
-    el.textContent = `✓ ${A.days.size} dia(s) detectado(s): ${keys[0]} a ${keys[keys.length-1]}`;
+    el.textContent=`✓ ${A.resumo.dayMeta.size} dia(s) com dados · ${A.resumo.headers.length} cabeçalho(s)` + (A.resumo.conflicts.length?` · ${A.resumo.conflicts.length} conflito(s)`:'');
   } else el.style.display='none';
+  autoRange(); markSteps();
+});
+$('textB').addEventListener('input',()=>{autoRange();markSteps();});
+
+/* atalhos de período */
+$('shortcuts').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const isos=[...sourceISOs(getSourceA()),...sourceISOs(getSourceB())].filter(Boolean).sort();
+  const ref = isos.length?isos[0]:($('dtIni').value||'2026-07-01');
+  const [y,m]=ref.split('-').map(Number);
+  const last=new Date(Date.UTC(y,m,0)).getUTCDate();
+  const sc=b.dataset.sc;
+  if(sc==='detected'&&isos.length){ $('dtIni').value=isos[0]; $('dtFim').value=isos[isos.length-1]; }
+  else if(sc==='q1'){ $('dtIni').value=isoOf(y,m,1); $('dtFim').value=isoOf(y,m,15); }
+  else if(sc==='q2'){ $('dtIni').value=isoOf(y,m,16); $('dtFim').value=isoOf(y,m,last); }
+  else if(sc==='month'){ $('dtIni').value=isoOf(y,m,1); $('dtFim').value=isoOf(y,m,last); }
+  else if(sc==='today'){ const d=isos.length?isos[isos.length-1]:ref; $('dtIni').value=d; $('dtFim').value=d; }
+  markSteps();
 });
 
-/* ================= CONFRONTO ================= */
-function showErr(msg){ const e=$('errBox'); e.textContent='⚠️ '+msg; e.style.display='block'; }
+/* stepper */
+function markSteps(){
+  const A=getSourceA(), B=getSourceB();
+  const st={1:!!A, 2:!!B, 3:lastResult||$('audit').style.display!=='none', 4:!!lastResult, 5:!!lastResult};
+  document.querySelectorAll('.step').forEach(s=>{
+    const n=+s.dataset.step; s.classList.toggle('done',!!st[n]); s.classList.remove('active');
+  });
+  const firstUndone=[1,2,3,4,5].find(n=>!st[n]);
+  const act=document.querySelector(`.step[data-step="${firstUndone||5}"]`); if(act) act.classList.add('active');
+}
+markSteps();
+
+/* =========================================================================
+   FLUXO: botão confrontar -> auditoria -> confirmar -> painel
+   ========================================================================= */
+function showErr(m){ const e=$('errBox'); e.textContent='⚠️ '+m; e.style.display='block'; e.scrollIntoView({behavior:'smooth',block:'center'}); }
 function hideErr(){ $('errBox').style.display='none'; }
 
-$('btnGo').addEventListener('click', ()=>{
+$('btnGo').addEventListener('click',()=>{
   hideErr();
-  const A = getSourceA();
-  if(!A) return showErr('Fonte A vazia. Cole os resumos do dia ou envie a planilha da Fonte A.');
-  if(A.type==='invalid') return showErr('Não reconheci o texto da Fonte A como resumo do dia. Confira linhas como "📊 Resumo do dia — 01/07 qua (SVC)" e "Diaristas → MELI: X · ID: Y".');
-  if(A.type==='resumo' && !A.days.size)
-    return showErr('Não encontrei nenhum "Resumo do dia — dd/mm" no texto da Fonte A.');
-  const B = getSourceB();
-  if(!B || !B.recs.length) return showErr('Fonte B vazia. Envie a planilha ou cole o texto da base efetiva.');
-  compute(A, B);
+  const A=getSourceA(); if(!A) return showErr('Fonte A vazia. Cole os resumos/base ou envie o arquivo da Fonte A.');
+  const B=getSourceB(); if(!B) return showErr('Fonte B vazia. Envie o arquivo ou cole o texto da base efetiva.');
+  if(A.kind==='resumo' && !A.cells.length) return showErr('Não encontrei dias com dados no resumo da Fonte A.');
+  if(A.kind==='records' && !A.records.length) return showErr('Não encontrei registros válidos na Fonte A.');
+  if(B.kind==='records' && !B.records.length) return showErr('Não encontrei registros válidos na Fonte B.');
+  if(!$('dtIni').value||!$('dtFim').value) autoRange();
+  if(!$('dtIni').value||!$('dtFim').value) return showErr('Defina a data inicial e final do período.');
+  renderAudit(A,B);
 });
+$('btnConfirmMap').addEventListener('click',()=>{ compute(); });
 
-$('viewToggle').querySelectorAll('button').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    $('viewToggle').querySelectorAll('button').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    if(lastResult) renderMatrix(lastResult, b.dataset.v);
+function renderAudit(A,B){
+  const mode=$('countMode').value;
+  const vA=validateImport(A,mode), vB=validateImport(B,mode);
+  $('audit').style.display='block';
+  $('auditA').innerHTML = auditCardHtml('Fonte A', A, vA);
+  $('auditB').innerHTML = auditCardHtml('Fonte B', B, vB);
+  // mapping table
+  const rows=[];
+  const mapAll=[...(A.mapping||[]).map(m=>({...m,_src:'A',_ref:A})), ...(B.mapping||[]).map(m=>({...m,_src:'B',_ref:B}))];
+  if(A.kind==='resumo') rows.push(`<tr><td>Fonte A</td><td>(resumo)</td><td colspan="2">Operação lida do escopo do cabeçalho — ex.: (SVC)</td><td class="num">${A.cells.length} células</td><td><span class="conf alta">Alta</span></td><td>—</td></tr>`);
+  mapAll.forEach((m,i)=>{
+    const id=m.origem+'|'+m.aba;
+    const ov=mapOverrides[id]||{};
+    const curFil=ov.filialKey||m.filialKey||'';
+    const curOp=ov.operacao||m.operacao;
+    rows.push(`<tr>
+      <td>${escapeHtml(m.origem)}</td><td>${escapeHtml(m.aba)}</td>
+      <td>${escapeHtml(branchLabel(m.filialKey)||m.filial||'—')}${m.opMix?' <span class="badge-mode">op. por linha</span>':''}</td>
+      <td>${escapeHtml(curOp)}</td>
+      <td class="num">${fmtInt(m.registros)}</td>
+      <td><span class="conf ${m.conf==='Alta'?'alta':m.conf==='Média'?'media':'baixa'}">${m.conf}</span></td>
+      <td>
+        <select data-mapfil="${escapeHtml(id)}" style="min-width:110px">
+          <option value="">— auto —</option>
+          ${BRANCHES.map(b=>`<option value="${b.key}" ${curFil===b.key?'selected':''}>${escapeHtml(b.key)}</option>`).join('')}
+        </select>
+        <select data-mapop="${escapeHtml(id)}" style="min-width:90px">
+          <option value="">— auto —</option>
+          ${OPERACOES.map(o=>`<option ${ov.operacao===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </td></tr>`);
   });
+  $('mapBody').innerHTML = rows.join('');
+  $('mapBody').querySelectorAll('[data-mapfil]').forEach(s=>s.addEventListener('change',e=>{
+    const id=e.target.dataset.mapfil; mapOverrides[id]=mapOverrides[id]||{}; mapOverrides[id].filialKey=e.target.value;
+  }));
+  $('mapBody').querySelectorAll('[data-mapop]').forEach(s=>s.addEventListener('change',e=>{
+    const id=e.target.dataset.mapop; mapOverrides[id]=mapOverrides[id]||{}; mapOverrides[id].operacao=e.target.value;
+  }));
+  $('dash').style.display='none';
+  $('audit').scrollIntoView({behavior:'smooth'});
+  markSteps();
+}
+function stat(v,k,cls,key){ return `<div class="stat ${cls||''} ${key?'click':''}" ${key?`data-drill="${key}"`:''}><div class="v">${v}</div><div class="k">${k}</div></div>`; }
+function auditCardHtml(title, src, v){
+  const L = title==='Fonte A'?'A':'B';
+  let body='';
+  if(v.kind==='resumo'){
+    body = `<div class="stat-list">
+      ${stat(v.headers,'cabeçalhos','')}
+      ${stat(v.daysComplete,'dias com dados','ok')}
+      ${stat(v.empty,'dias vazios',v.empty?'warn':'')}
+      ${stat(v.dupDays,'dias com blocos repetidos',v.dupDays?'warn':'','A:dupdays')}
+      ${stat(v.combos,'combinações (célula)','')}
+      ${stat(v.conflicts.length,'conflitos de valor',v.conflicts.length?'bad':'ok','A:conflicts')}
+      ${stat(v.identicalDups,'duplicatas idênticas ignoradas','')}
+      ${stat(v.orphan,'blocos sem data',v.orphan?'bad':'')}
+    </div>`;
+  } else {
+    body = `<div class="stat-list">
+      ${stat(fmtInt(v.raw),'linhas brutas','','')}
+      ${stat(fmtInt(v.unique),'pessoas únicas (ID)','')}
+      ${stat(fmtInt(v.sane),'saneada (sem dup. exata)','ok')}
+      ${stat(fmtInt(v.dupExact),'duplicidades exatas',v.dupExact?'warn':'',L+':dupexact')}
+      ${stat(fmtInt(v.noId),'sem GROOT ID',v.noId?'warn':'',L+':noid')}
+      ${stat(fmtInt(v.notClassified),'op. não classificada',v.notClassified?'warn':'',L+':notclass')}
+      ${stat(fmtInt(v.rejected),'linhas rejeitadas',v.rejected?'bad':'',L+':rejected')}
+      ${stat(v.missingCols.length,'colunas ausentes',v.missingCols.length?'bad':'ok','')}
+    </div>`;
+    if(v.missingCols.length) body += `<div class="insight i-bad" style="margin-top:10px">${v.missingCols.map(escapeHtml).join('<br>')}</div>`;
+  }
+  return `<h3><span class="tag ${title==='Fonte A'?'tag-a':'tag-b'}">${title}</span> ${escapeHtml(src.fileName||'')}</h3>
+    <div class="hint" style="margin-bottom:8px">${src.kind==='resumo'?'Resumo do dia (previsto)':'Base tabular ('+ (src.mapping?src.mapping.length:1) +' aba/arquivo)'}</div>${body}`;
+}
+// drill nas auditorias
+document.addEventListener('click',e=>{
+  const s=e.target.closest('[data-drill]'); if(!s) return;
+  drillAudit(s.dataset.drill);
 });
-
-function compute(A, B){
-  const esc = $('escalaSel').value;
-  const fEsc = r => !esc || r.escala.toLowerCase()===esc.toLowerCase();
-
-  // ----- Fonte A por dia -----
-  let aDays; // Map 'dd/mm' -> {sites:{fk:{meli,id,vol,...}}, total, wd, ...}
-  if(A.type==='resumo'){
-    aDays = A.days;
-  } else {
-    aDays = new Map();
-    A.recs.forEach(r=>{
-      if(!aDays.has(r.dkey)) aDays.set(r.dkey, {key:r.dkey, dd:r.dd, mm:r.mm, wd:'', scope:null, sites:{}, total:null, blocks:1, totalCount:0, overwrites:0, fromBase:true});
-      const d = aDays.get(r.dkey);
-      if(!d.sites[r.filial]) d.sites[r.filial] = {label:filialLabel(r.filial), vol:null, hcSop:null, hcProd:null, abs:null, meli:0, id:0};
-      const s = d.sites[r.filial];
-      if(r.solic==='MELI') s.meli++;
-      else if(r.solic==='ID') s.id++;
-    });
+function drillAudit(code){
+  const A=getSourceA(), B=getSourceB();
+  const vA=validateImport(A,$('countMode').value), vB=validateImport(B,$('countMode').value);
+  let title='', html='';
+  if(code==='A:conflicts'){ title='Conflitos de valor na Fonte A';
+    html = vA.conflicts.length? vA.conflicts.map(c=>`<div class="rej-line">${escapeHtml(fmtBR(c.iso))} · ${escapeHtml(c.op)} · ${escapeHtml(branchLabel(c.filialKey))} · ${escapeHtml(c.sol)}: valor ${c.prev} vs ${c.novo} (mantido o 1º; conflito sinalizado)</div>`).join('') : '<em>Nenhum conflito.</em>'; }
+  else if(code==='A:dupdays'){ title='Dias com blocos repetidos (Fonte A)';
+    const dd=[...A.resumo.dayMeta.values()].filter(d=>d.blocks>1);
+    html = dd.length? dd.map(d=>`<div class="rej-line">${escapeHtml(fmtBR(d.iso))} — ${d.blocks} blocos; ${d.totals.length} linha(s) TOTAL. Duplicatas idênticas ignoradas; divergências viram conflito.</div>`).join('') : '<em>Nenhum.</em>'; }
+  else {
+    const src = code[0]==='A'?A:B; const v=code[0]==='A'?vA:vB; const kind=code.split(':')[1];
+    const list = kind==='dupexact'?v.dupExactRecs:kind==='noid'?v.noIdRecs:kind==='notclass'?v.notClassifiedRecs:kind==='rejected'?v.rejectedRecs:[];
+    title = ({dupexact:'Duplicidades exatas',noid:'Registros sem GROOT ID',notclass:'Operações não classificadas',rejected:'Linhas rejeitadas'})[kind]+' — '+src.origem;
+    html = list.length? list.map(r=>`<div class="rej-line">${escapeHtml(r.aba||'')}${r.linha?(' L'+r.linha):''} · ${escapeHtml(fmtBR(r.data)||'')} · ${escapeHtml(r.nome||r.dump||'')} ${r.grootId?('· '+escapeHtml(r.grootId)):''} ${r.motivo?('· '+escapeHtml(r.motivo)):''} ${r.operacao?('· op '+escapeHtml(r.operacao)):''}</div>`).join('') : '<em>Nenhum.</em>';
   }
-
-  // ----- período = meses presentes na Fonte A -----
-  const monthsA = new Set([...aDays.values()].map(d=>d.mm));
-  const bAll = B.recs;
-  const bInPeriod = bAll.filter(r=>monthsA.has(r.mm));
-  const bOutCount = bAll.length - bInPeriod.length;
-  const bMonthsOut = [...new Set(bAll.filter(r=>!monthsA.has(r.mm)).map(r=>MES_NOME[r.mm]||r.mm))];
-  const bIn = bInPeriod.filter(fEsc);
-  const escExcluded = bInPeriod.length - bIn.length;
-
-  // ----- universo de dias e filiais -----
-  const dayKeys = [...new Set([...aDays.keys(), ...bIn.map(r=>r.dkey)])].sort(dkSort);
-  const filialSet = new Set();
-  aDays.forEach(d=>Object.keys(d.sites).forEach(k=>filialSet.add(k)));
-  bIn.forEach(r=>filialSet.add(r.filial));
-  const filiais = [...filialSet].sort((x,y)=>{
-    const ix = SITES.findIndex(s=>s.key===x), iy = SITES.findIndex(s=>s.key===y);
-    return (ix<0?99:ix)-(iy<0?99:iy) || String(x).localeCompare(String(y));
-  });
-
-  // ----- células dia × filial -----
-  const cells = {}; // dkey|fk -> {aM,aI,bM,bI,bOther,recs,aSite}
-  const bByDayFil = {};
-  bIn.forEach(r=>{ const k=r.dkey+'|'+r.filial; (bByDayFil[k]=bByDayFil[k]||[]).push(r); });
-  dayKeys.forEach(dk=>{
-    const ad = aDays.get(dk);
-    filiais.forEach(fk=>{
-      const aSite = ad ? ad.sites[fk] : null;
-      const recs = bByDayFil[dk+'|'+fk] || [];
-      cells[dk+'|'+fk] = {
-        aM: aSite && aSite.meli!=null ? aSite.meli : null,
-        aI: aSite && aSite.id!=null ? aSite.id : null,
-        bM: recs.filter(r=>r.solic==='MELI').length,
-        bI: recs.filter(r=>r.solic==='ID').length,
-        bVazio: recs.filter(r=>r.solic==='VAZIO').length,
-        bOutro: recs.filter(r=>r.solic==='OUTRO').length,
-        recs, aSite
-      };
-    });
-  });
-
-  lastResult = {A, aDays, dayKeys, filiais, cells, bIn, bAll, bOutCount, bMonthsOut, esc, escExcluded};
-  render(lastResult);
+  openDrawer(title, html);
 }
 
-/* ================= RENDER ================= */
-function cellClass(a, b){
-  if(a==null && b===0) return 'c-nil';
-  if(a==null) return 'c-exc';          // só na Fonte B
-  if(b===a) return 'c-ok';
-  return b>a ? 'c-exc' : 'c-fal';
-}
-function cellTxt(a, b){
-  const at = a==null ? '—' : a;
-  return `${at}<span class="arr">→</span>${b}`;
-}
-
-function renderMatrix(R, view){
-  const isMeli = view==='meli';
-  const head = ['<tr><th style="text-align:left">Dia</th>']
-    .concat(R.filiais.map(fk=>`<th class="${isMeli?'grp-meli':'grp-id'}">${filialLabel(fk).replace(/^SMG\d+ - /,'')}</th>`))
-    .concat([`<th class="${isMeli?'grp-meli':'grp-id'}">Total ${isMeli?'MELI':'ID'}</th><th>Status</th></tr>`]);
-  $('matrixHead').innerHTML = head.join('');
-
-  const rows = [];
-  let gA=0, gB=0;
-  const colA = {}, colB = {};
-  R.dayKeys.forEach(dk=>{
-    const ad = R.aDays.get(dk);
-    let dA=0, dB=0, hasA=false;
-    const tds = R.filiais.map(fk=>{
-      const c = R.cells[dk+'|'+fk];
-      const a = isMeli ? c.aM : c.aI, b = isMeli ? c.bM : c.bI;
-      if(a!=null){ dA+=a; hasA=true; colA[fk]=(colA[fk]||0)+a; }
-      colB[fk]=(colB[fk]||0)+b;
-      dB+=b;
-      return `<td class="cell ${cellClass(a,b)}">${cellTxt(a,b)}</td>`;
-    });
-    gA+=dA; gB+=dB;
-    const diff = dB-dA;
-    let st, cls;
-    if(!ad || !Object.keys(ad.sites||{}).length){ st='Sem resumo'; cls='s-dim'; }
-    else if(!hasA && dB===0){ st='—'; cls='s-dim'; }
-    else if(diff===0){ st='Bate ✓'; cls='s-ok'; }
-    else if(diff>0){ st='+'+diff+' excedente'; cls='s-bad'; }
-    else { st=diff+' abaixo'; cls='s-warn'; }
-    rows.push(`
-      <tr class="expandable" data-d="${dk}">
-        <td class="day">${dk} <span class="wd">${ad&&ad.wd?ad.wd:''}</span></td>
-        ${tds.join('')}
-        <td class="cell ${cellClass(hasA?dA:null,dB)}">${cellTxt(hasA?dA:null,dB)}</td>
-        <td><span class="status ${cls}">${st}</span></td>
-      </tr>
-      <tr class="detail" data-detail="${dk}" style="display:none"><td colspan="${R.filiais.length+3}">${dayDetailHtml(R, dk)}</td></tr>`);
-  });
-  rows.push(`<tr class="tot"><td class="day">TOTAL período</td>
-    ${R.filiais.map(fk=>`<td class="cell ${cellClass(colA[fk]!=null?colA[fk]:null, colB[fk]||0)}">${cellTxt(colA[fk]!=null?colA[fk]:null, colB[fk]||0)}</td>`).join('')}
-    <td class="cell ${cellClass(gA,gB)}">${cellTxt(gA,gB)}</td>
-    <td><span class="status ${gB===gA?'s-ok':(gB>gA?'s-bad':'s-warn')}">${gB===gA?'Bate ✓':(gB>gA?'+':'')+(gB-gA)}</span></td></tr>`);
-  $('matrixBody').innerHTML = rows.join('');
-  document.querySelectorAll('#matrixBody tr.expandable').forEach(tr=>{
-    tr.addEventListener('click', ()=>{
-      const d = document.querySelector(`#matrixBody tr[data-detail="${tr.dataset.d}"]`);
-      d.style.display = d.style.display==='none' ? '' : 'none';
-    });
+/* =========================================================================
+   COMPUTE: constrói estrutura normalizada única + confronto
+   ========================================================================= */
+function applyOverridesRecords(records){
+  return records.map(r=>{
+    const id=r.origem+'|'+r.aba; const ov=mapOverrides[id];
+    if(!ov) return r;
+    const nr={...r};
+    if(ov.filialKey){ nr.filialKey=ov.filialKey; nr.filial=branchLabel(ov.filialKey); }
+    if(ov.operacao){ nr.operacao=ov.operacao; }
+    return nr;
   });
 }
+function compute(){
+  const A=getSourceA(), B=getSourceB();
+  const mode=$('countMode').value;
+  const ini=$('dtIni').value, fim=$('dtFim').value;
+  const range=buildDateRange(ini,fim);
 
-function dayDetailHtml(R, dk){
-  const ad = R.aDays.get(dk);
-  const dupSet = dupSetForDay(R, dk);
-  const rows = R.filiais.map(fk=>{
-    const c = R.cells[dk+'|'+fk];
-    if(c.aM==null && !c.recs.length) return '';
-    const s = c.aSite || {};
-    const dM = c.aM!=null ? c.bM-c.aM : null;
-    const dI = c.aI!=null ? c.bI-c.aI : null;
-    const dCell = d => d==null ? '<td>—</td>' : `<td><span class="delta ${d===0?'d0':(d>0?'dpos':'dneg')}">${d>0?'+':''}${d}</span></td>`;
-    return `<tr>
-      <td class="site">${filialLabel(fk)}</td>
-      <td class="num">${fmtNum(s.vol)}</td><td class="num">${fmtNum(s.hcSop)}</td><td class="num">${fmtNum(s.hcProd)}</td><td class="num">${s.abs||'—'}</td>
-      <td class="num">${c.aM!=null?c.aM:'—'}</td><td class="num">${c.bM}</td>${dCell(dM)}
-      <td class="num">${c.aI!=null?c.aI:'—'}</td><td class="num">${c.bI}</td>${dCell(dI)}
-    </tr>`;
-  }).join('');
-  const totLine = ad && ad.total ? `<div class="hint" style="margin-top:4px">Linha TOTAL declarada na Fonte A: MELI ${ad.total.meli} · ID ${ad.total.id}</div>` : '';
-  const names = R.filiais.map(fk=>{
-    const c = R.cells[dk+'|'+fk];
-    if(!c.recs.length) return '';
-    return `<details class="names-det"><summary>${filialLabel(fk)} — ${c.recs.length} registro(s) na Fonte B</summary>${namesHtml(c.recs, dupSet, fk)}</details>`;
-  }).join('');
-  return `<table class="mini-tbl"><thead><tr>
-      <th style="text-align:left">Filial</th><th>Volume</th><th>HC S&amp;OP</th><th>HC prod.</th><th>%ABS</th>
-      <th class="grp-meli">MELI A</th><th class="grp-meli">MELI B</th><th class="grp-meli">Δ</th>
-      <th class="grp-id">ID A</th><th class="grp-id">ID B</th><th class="grp-id">Δ</th>
-    </tr></thead><tbody>${rows || '<tr><td colspan="11" style="color:var(--ink-dim)">Sem dados neste dia.</td></tr>'}</tbody></table>${totLine}${names}`;
+  // células A
+  let cellsA, recordsA=null;
+  if(A.kind==='resumo'){ cellsA=A.cells.map(c=>({...c})); }
+  else { recordsA=applyOverridesRecords(A.records); cellsA=aggregateToCells(recordsA,mode); }
+  // células B
+  const recordsB=applyOverridesRecords(B.records||[]);
+  const cellsB=aggregateToCells(recordsB,mode);
+
+  // dimensões presentes
+  const ops=[...new Set([...cellsA,...cellsB].map(c=>c.operacao).filter(o=>o&&o!=='VAZIO'))]
+    .sort((a,b)=>{const i=OPERACOES.indexOf(a),j=OPERACOES.indexOf(b);return (i<0?9:i)-(j<0?9:j)||String(a).localeCompare(b);});
+  const fils=[...new Set([...cellsA,...cellsB].map(c=>c.filialKey))]
+    .sort((a,b)=>{const i=BRANCHES.findIndex(x=>x.key===a),j=BRANCHES.findIndex(x=>x.key===b);return (i<0?9:i)-(j<0?9:j)||String(a).localeCompare(b);});
+
+  // índice de células por chave data|op|fil|solic
+  const idxA=new Map(cellsA.map(c=>[c.data+'|'+c.operacao+'|'+c.filialKey+'|'+c.solicitante,c]));
+  const idxB=new Map(cellsB.map(c=>[c.data+'|'+c.operacao+'|'+c.filialKey+'|'+c.solicitante,c]));
+
+  lastResult={A,B,mode,range,ini,fim,cellsA,cellsB,recordsA,recordsB,ops,fils,idxA,idxB,
+    costs:{meli:+$('costMeli').value||0,id:+$('costId').value||0,sat:+$('multSat').value||1,sun:+$('multSun').value||1,night:+$('addNight').value||0}};
+  lastResult.filters=lastResult.filters||{op:'',fil:'',sol:'',emp:'',turno:'',wd:'',only:''};
+  render();
+  saveSession(true);
 }
 
-function dupSetForDay(R, dk){
-  const map = {};
-  R.bIn.filter(r=>r.dkey===dk).forEach(r=>{ if(!r.id) return; const k=r.filial+'|'+r.id; (map[k]=map[k]||[]).push(r); });
-  return new Set(Object.entries(map).filter(([,a])=>a.length>1).map(([k])=>k));
-}
-function namesHtml(recs, dupSet, fk){
-  const li = r => `<li class="${!r.id?'noid':(dupSet.has(fk+'|'+r.id)?'dup':'')}">${r.nome} <span style="opacity:.55;font-family:var(--mono);font-size:11px">${r.id||'s/ ID'}${r.empresa?' · '+r.empresa:''}${r.escala?' · '+r.escala:''}</span></li>`;
-  const meli = recs.filter(r=>r.solic==='MELI'), id = recs.filter(r=>r.solic==='ID'),
-        out = recs.filter(r=>r.solic==='OUTRO'||r.solic==='VAZIO');
-  return `<div class="names">
-    <div><h4 class="h-meli">MELI · ${meli.length}</h4><ol>${meli.map(li).join('')||'<em>—</em>'}</ol></div>
-    <div><h4 class="h-id">ID LOGISTICS · ${id.length}</h4><ol>${id.map(li).join('')||'<em>—</em>'}</ol>
-    ${out.length? `<h4 class="h-out" style="margin-top:10px">SOLICITANTE VAZIO/OUTRO · ${out.length}</h4><ol>${out.map(li).join('')}</ol>`:''}</div>
-  </div>`;
+/* custo unitário por célula diária */
+function resolveCost(iso, sol, operacao, empresa){
+  const c=lastResult.costs;
+  let base = sol==='MELI'?c.meli:sol==='ID'?c.id:Math.max(c.meli,c.id);
+  const wd=weekdayOf(iso);
+  if(wd===6) base*=c.sat; else if(wd===0) base*=c.sun;
+  if(c.night) base*=(1+c.night/100);
+  return base;
 }
 
-function render(R){
-  $('dash').style.display='block';
-  renderMatrix(R, $('viewToggle').querySelector('button.active').dataset.v);
-
-  // ----- consolidado por filial -----
-  let tMA=0,tMB=0,tIA=0,tIB=0, excM=0,excI=0, falM=0,falI=0, okDays=0, cmpDays=0;
-  const consRows = [];
-  R.filiais.forEach(fk=>{
-    let aM=0,bM=0,aI=0,bI=0, hasA=false, diasOk=0, diasCmp=0;
-    R.dayKeys.forEach(dk=>{
-      const c = R.cells[dk+'|'+fk];
-      if(c.aM!=null){ aM+=c.aM; aI+=c.aI; hasA=true; diasCmp++;
-        if(c.bM===c.aM && c.bI===c.aI) diasOk++;
-        excM += Math.max(0,c.bM-c.aM); excI += Math.max(0,c.bI-c.aI);
-        falM += Math.max(0,c.aM-c.bM); falI += Math.max(0,c.aI-c.bI);
-      }
-      bM+=c.bM; bI+=c.bI;
+/* buildComparisonCells: para cada data×op×fil×solic no range -> {a,b,gap,exposure,deficit} */
+function buildComparisonCells(){
+  const R=lastResult, out=[];
+  R.range.forEach(iso=>{
+    R.ops.forEach(op=>{
+      R.fils.forEach(fk=>{
+        SOLIC.forEach(sol=>{
+          const key=iso+'|'+op+'|'+fk+'|'+sol;
+          const a=R.idxA.get(key), b=R.idxB.get(key);
+          const av=a?a.count:null, bv=b?b.count:null;
+          if(av==null && bv==null) return;
+          const exposure=Math.max((bv||0)-(av||0),0)*resolveCost(iso,sol,op);
+          const deficit=Math.max((av||0)-(bv||0),0);
+          out.push({iso,op,fk,sol,a:av,b:bv,gap:(bv||0)-(av||0),exposure,deficit,
+            deficitValue:deficit*resolveCost(iso,sol,op), recsB:b?b.recs:[], meta:a?a.meta:null});
+        });
+      });
     });
-    tMA+=aM; tMB+=bM; tIA+=aI; tIB+=bI;
-    const dM=bM-aM, dI=bI-aI;
-    let st, cls;
-    if(!hasA){ st='Só na Fonte B'; cls='s-warn'; }
-    else if(dM===0&&dI===0){ st='Bate ✓'; cls='s-ok'; }
-    else if(dM>0||dI>0){ st='Excedente (custo)'; cls='s-bad'; }
-    else { st='Abaixo do previsto'; cls='s-warn'; }
-    const dCell = (d,show) => !show ? '<td>—</td>' : `<td><span class="delta ${d===0?'d0':(d>0?'dpos':'dneg')}">${d>0?'+':''}${d}</span></td>`;
-    consRows.push(`<tr>
-      <td class="site">${filialLabel(fk)}</td>
-      <td class="num">${hasA?aM:'—'}</td><td class="num">${bM}</td>${dCell(dM,hasA)}
-      <td class="num">${hasA?aI:'—'}</td><td class="num">${bI}</td>${dCell(dI,hasA)}
-      <td class="num">${hasA?diasOk+'/'+diasCmp:'—'}</td>
-      <td><span class="status ${cls}">${st}</span></td></tr>`);
   });
-  $('consBody').innerHTML = consRows.join('');
+  return out;
+}
 
-  // dias batendo (total do dia, MELI+ID)
-  R.dayKeys.forEach(dk=>{
-    const ad = R.aDays.get(dk);
-    if(!ad || !Object.keys(ad.sites||{}).length) return;
-    cmpDays++;
-    let ok = true;
-    R.filiais.forEach(fk=>{ const c=R.cells[dk+'|'+fk];
-      if(c.aM!=null && (c.bM!==c.aM || c.bI!==c.aI)) ok=false;
-      if(c.aM==null && (c.bM>0||c.bI>0) && !SITES.find(s=>s.key===fk&&s.extra)) ok=false;
-    });
-    if(ok) okDays++;
-  });
+/* filtros aplicáveis */
+function passFilter(c){
+  const f=lastResult.filters;
+  if(f.op && c.op!==f.op) return false;
+  if(f.fil && c.fk!==f.fil) return false;
+  if(f.sol && c.sol!==f.sol) return false;
+  if(f.wd && String(weekdayOf(c.iso))!==f.wd) return false;
+  if(f.turno){ if(!(c.recsB||[]).some(r=>r.turno===f.turno)) return false; }
+  if(f.emp){ if(!(c.recsB||[]).some(r=>r.empresaDiarista===f.emp)) return false; }
+  if(f.only==='div' && c.gap===0) return false;
+  if(f.only==='exc' && c.gap<=0) return false;
+  if(f.only==='def' && c.gap>=0) return false;
+  return true;
+}
 
-  // ----- KPIs -----
-  const totExc = excM+excI, totFal = falM+falI;
-  const range = R.dayKeys.length ? R.dayKeys[0]+' a '+R.dayKeys[R.dayKeys.length-1] : '—';
-  $('kpis').innerHTML = `
-    <div class="kpi k-amber"><div class="n">${R.dayKeys.length}</div><div class="l">Dias no período<br>(${okDays}/${cmpDays} dias batem 100%)</div></div>
-    <div class="kpi k-amber"><div class="n">${tMA} <span class="sep">→</span> ${tMB}</div><div class="l">MELI: Fonte A → Fonte B (Δ ${tMB-tMA>0?'+':''}${tMB-tMA})</div></div>
-    <div class="kpi k-blue"><div class="n">${tIA} <span class="sep">→</span> ${tIB}</div><div class="l">ID: Fonte A → Fonte B (Δ ${tIB-tIA>0?'+':''}${tIB-tIA})</div></div>
-    <div class="kpi ${totExc?'k-bad':'k-ok'}"><div class="n">+${totExc}</div><div class="l">Diárias excedentes (custo adicional)</div></div>
-    <div class="kpi ${totFal?'k-warn':'k-ok'}"><div class="n">−${totFal}</div><div class="l">Diárias previstas sem registro na B</div></div>`;
-  $('dashMeta').textContent = `período ${range} · Fonte A: ${R.A.type==='resumo'?R.aDays.size+' resumo(s)':'base'} · Fonte B: ${R.bIn.length} registros no período`
-    + (R.esc ? ` · escala "${R.esc}"` : '');
+/* =========================================================================
+   RENDER principal
+   ========================================================================= */
+function dayStatus(aTot,bTot,hasA,hasB,flags){
+  if(!hasA && !hasB) return {t:'Sem dados',c:'s-dim'};
+  if(hasA && !hasB)  return {t:'Sem Fonte B',c:'s-info'};
+  if(!hasA && hasB)  return {t:'Sem Fonte A',c:'s-purple'};
+  const gap=bTot-aTot;
+  if(flags&&flags.conflict) return {t:'Conflito de importação',c:'s-exc'};
+  if(flags&&flags.notClass) return {t:'Operação não classificada',c:'s-def'};
+  if(gap===0) return {t:'Conferido',c:'s-ok'};
+  if(gap>0)   return {t:'Excedente',c:'s-exc'};
+  return {t:'Déficit',c:'s-def'};
+}
+function gapCell(g,show){
+  if(!show) return '<td><span class="gap gdim">—</span></td>';
+  const cls=g===0?'g0':g>0?'gpos':'gneg';
+  return `<td><span class="gap ${cls}">${g>0?'+':''}${g}</span></td>`;
+}
 
-  // ----- alertas de custo -----
-  const costAlerts = [];
-  if(excM+excI > 0){
-    costAlerts.push(`<div class="insight i-cost"><span class="cost-badge">TOTAL PERÍODO</span><b>+${excM} diária(s) MELI</b> e <b>+${excI} diária(s) ID Logistics</b> na Fonte B além do previsto na Fonte A — quantidades sujeitas a custo além do acordado.</div>`);
-    // top dias/filiais excedentes
-    const excList = [];
-    R.dayKeys.forEach(dk=>R.filiais.forEach(fk=>{
-      const c=R.cells[dk+'|'+fk]; if(c.aM==null) return;
-      const eM=Math.max(0,c.bM-c.aM), eI=Math.max(0,c.bI-c.aI);
-      if(eM+eI>0) excList.push({dk,fk,eM,eI,tot:eM+eI});
-    }));
-    excList.sort((a,b)=>b.tot-a.tot).slice(0,8).forEach(e=>{
-      costAlerts.push(`<div class="insight i-cost"><span class="cost-badge">CUSTO ADICIONAL</span><b>${e.dk} · ${filialLabel(e.fk)}:</b> ${e.eM?`+${e.eM} MELI`:''}${e.eM&&e.eI?' e ':''}${e.eI?`+${e.eI} ID`:''} além do previsto no resumo.</div>`);
-    });
-  } else {
-    costAlerts.push(`<div class="insight i-ok"><b>Sem custo adicional no período.</b> Nenhum dia/filial tem diaristas na Fonte B além do previsto na Fonte A.</div>`);
-  }
-  $('costAlerts').innerHTML = costAlerts.join('');
-
-  // ----- irregularidades & insights -----
-  const ins = [];
-  // resumo geral
-  ins.push(`<div class="insight i-info"><b>Visão geral:</b> no período ${range}, a Fonte A previu <b>${tMA} diárias MELI</b> e <b>${tIA} ID</b>; a Fonte B registra <b>${tMB} MELI</b> e <b>${tIB} ID</b>. ${totFal>0?`Há <b>${totFal} diária(s) previstas sem registro correspondente</b> na base — solicitações não lançadas, cancelamentos ou base incompleta.`:''}</div>`);
-  // maiores gaps por filial
-  const gaps = R.filiais.map(fk=>{
-    let aM=0,bM=0,has=false;
-    R.dayKeys.forEach(dk=>{ const c=R.cells[dk+'|'+fk]; if(c.aM!=null){aM+=c.aM;has=true;} bM+=c.bM; });
-    return {fk, d:bM-aM, has};
-  }).filter(g=>g.has && g.d!==0).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
-  if(gaps.length) ins.push(`<div class="insight ${Math.abs(gaps[0].d)>10?'i-bad':'i-warn'}"><b>Maior divergência MELI do período:</b> ${filialLabel(gaps[0].fk)} com <b>${gaps[0].d>0?'+':''}${gaps[0].d}</b> diária(s) (B − A).${gaps[1]?` Em seguida: ${filialLabel(gaps[1].fk)} (${gaps[1].d>0?'+':''}${gaps[1].d}).`:''}</div>`);
-  // dias previstos sem nenhum registro na B
-  const missDays = R.dayKeys.filter(dk=>{
-    const ad=R.aDays.get(dk); if(!ad||!Object.keys(ad.sites||{}).length) return false;
-    const predicted = Object.values(ad.sites).reduce((t,s)=>t+(s.meli||0)+(s.id||0),0);
-    const got = R.filiais.reduce((t,fk)=>t+R.cells[dk+'|'+fk].recs.length,0);
-    return predicted>0 && got===0;
-  });
-  if(missDays.length) ins.push(`<div class="insight i-bad"><b>Dias previstos sem NENHUM registro na Fonte B:</b> ${missDays.join(', ')}. A base efetiva não cobre esses dias — confronto impossível; verifique se a planilha está completa.</div>`);
-  // dias na B sem resumo na A
-  const noResumoDays = R.dayKeys.filter(dk=>{
-    const ad=R.aDays.get(dk);
-    const got = R.filiais.reduce((t,fk)=>t+R.cells[dk+'|'+fk].recs.length,0);
-    return got>0 && (!ad || !Object.keys(ad.sites||{}).length);
-  });
-  if(noResumoDays.length) ins.push(`<div class="insight i-warn"><b>Dias com registros na Fonte B mas sem dados no resumo:</b> ${noResumoDays.map(d=>{const n=R.filiais.reduce((t,fk)=>t+R.cells[d+'|'+fk].recs.length,0);return `${d} (${n} reg.)`}).join(', ')} — o previsto desses dias não foi informado na Fonte A.</div>`);
-  // dias duplicados / blocos duplicados no texto
-  if(R.A.type==='resumo'){
-    R.aDays.forEach(d=>{
-      if(d.blocks>1) ins.push(`<div class="insight i-warn"><b>Dia ${d.key} apareceu ${d.blocks}× no texto colado.</b> Considerei a última versão de cada filial. Confira se não colou versão antiga e revisada juntas.</div>`);
-      else if(d.overwrites>0 || d.totalCount>0) ins.push(`<div class="insight i-warn"><b>Dia ${d.key} tem blocos repetidos dentro do mesmo resumo</b> (${d.totalCount+1} linha(s) TOTAL). Considerei a última versão — possível colagem duplicada/revisada.</div>`);
-    });
-    // consistência TOTAL declarado × soma dos sites
-    R.aDays.forEach(d=>{
-      if(!d.total || !Object.keys(d.sites).length) return;
-      const sM = Object.values(d.sites).reduce((t,s)=>t+(s.meli||0),0);
-      const sI = Object.values(d.sites).reduce((t,s)=>t+(s.id||0),0);
-      if(sM!==d.total.meli || sI!==d.total.id)
-        ins.push(`<div class="insight i-warn"><b>TOTAL do resumo de ${d.key} não fecha:</b> soma dos sites = MELI ${sM} · ID ${sI}, mas a linha TOTAL diz MELI ${d.total.meli} · ID ${d.total.id}. O erro está no próprio texto da Fonte A.</div>`);
-    });
-  }
-  // GROOT ID duplicado no mesmo dia/filial
-  const dupMap = {};
-  R.bIn.forEach(r=>{ if(!r.id) return; const k=r.dkey+'|'+r.filial+'|'+r.id; (dupMap[k]=dupMap[k]||[]).push(r); });
-  const dups = Object.values(dupMap).filter(a=>a.length>1);
-  dups.slice(0,10).forEach(g=>{
-    const r=g[0];
-    const nomes=[...new Set(g.map(x=>x.nome))];
-    ins.push(`<div class="insight i-bad"><b>GROOT ID duplicado (Fonte B):</b> <span class="pill">${r.id}</span> aparece ${g.length}× em ${filialLabel(r.filial)} no dia ${r.dkey}${nomes.length>1?` com <b>nomes diferentes</b> (${nomes.join(' / ')}) — possível erro de cadastro`:` (${r.nome})`}. Contagem inflada — pode gerar cobrança em dobro.</div>`);
-  });
-  if(dups.length>10) ins.push(`<div class="insight i-bad">…e mais ${dups.length-10} caso(s) de GROOT ID duplicado no período.</div>`);
-  // solicitante vazio / outro
-  const vaz = R.bIn.filter(r=>r.solic==='VAZIO');
-  if(vaz.length){
-    const porFil = {};
-    vaz.forEach(r=>{ porFil[r.filial]=(porFil[r.filial]||0)+1; });
-    ins.push(`<div class="insight i-bad"><b>Solicitante em branco (Fonte B):</b> ${vaz.length} registro(s) sem SOLICITANTE — ${Object.entries(porFil).map(([f,n])=>`${filialLabel(f)}: ${n}`).join(' · ')}. Esses registros <b>não contam nem como MELI nem como ID</b> no confronto e o custo fica indefinido. Preencha a coluna SOLICITANTE.</div>`);
-  }
-  const outro = R.bIn.filter(r=>r.solic==='OUTRO');
-  if(outro.length) ins.push(`<div class="insight i-warn"><b>Solicitante não identificado:</b> ${outro.length} registro(s) com valor fora do padrão (nem MELI nem ID Logistics): ${[...new Set(outro.map(r=>r.solic))].join(', ')}.</div>`);
-  // sem groot id
-  const noId = R.bIn.filter(r=>!r.id);
-  if(noId.length) ins.push(`<div class="insight i-bad"><b>Sem GROOT ID (Fonte B):</b> ${noId.length} registro(s) sem identificação — ${noId.slice(0,5).map(r=>r.nome).join(', ')}${noId.length>5?'…':''}. Impossível validar o diarista.</div>`);
-  // ids não numéricos
-  const badId = R.bIn.filter(r=>r.id && !/^\d+$/.test(r.id));
-  if(badId.length) ins.push(`<div class="insight i-warn"><b>GROOT ID fora do padrão:</b> ${badId.length} registro(s) com ID não numérico: ${[...new Set(badId.map(r=>r.id))].slice(0,6).join(', ')}.</div>`);
-  // diaristas recorrentes
-  const freq = {};
-  R.bIn.forEach(r=>{ if(!r.id) return; const k=r.id; freq[k]=freq[k]||{nome:r.nome, dias:new Set(), fil:r.filial}; freq[k].dias.add(r.dkey); });
-  const top = Object.entries(freq).map(([id,v])=>({id, nome:v.nome, n:v.dias.size, fil:v.fil})).filter(t=>t.n>=5).sort((a,b)=>b.n-a.n).slice(0,5);
-  if(top.length) ins.push(`<div class="insight i-info"><b>Diaristas mais recorrentes no período:</b> ${top.map(t=>`${t.nome} (<span class="pill">${t.id}</span>, ${t.n} dias)`).join(' · ')}. Recorrência alta pode indicar demanda fixa — avaliar efetivação × diária.</div>`);
-  // registros fora do período
-  if(R.bOutCount>0) ins.push(`<div class="insight i-info"><b>${R.bOutCount} registro(s) da Fonte B fora do período</b> (mês: ${R.bMonthsOut.join(', ')}) foram ignorados no confronto.</div>`);
-  // filtro de escala
-  if(R.esc && R.escExcluded>0) ins.push(`<div class="insight i-info">Filtro de escala "${R.esc}" excluiu ${R.escExcluded} registro(s) da Fonte B no período. Limpe o filtro para contar tudo.</div>`);
-  if(ins.length<=1) ins.push('<div class="insight i-ok">Nenhuma irregularidade encontrada no período.</div>');
-  $('insights').innerHTML = ins.join('');
+function render(){
+  const R=lastResult; $('dash').style.display='block';
+  $('modeBadge').textContent = ({raw:'linhas brutas',unique:'pessoas únicas',sane:'saneada'})[R.mode];
+  $('dashMeta').textContent = `período ${fmtBRfull(R.ini)} → ${fmtBRfull(R.fim)} · ${R.range.length} dia(s) · A: ${R.A.kind==='resumo'?'resumo':'base'} · B: ${R.recordsB.length} reg.`;
+  renderFilters();
+  renderDaily();
+  renderAccumulated();
+  renderFinancial();
+  renderNominal();
+  renderCostAlerts();
+  renderInsights();
+  renderStoryAndKpis();
+  markSteps();
   $('dash').scrollIntoView({behavior:'smooth'});
 }
 
-/* ================= EXPORT CSV ================= */
-$('btnCsv').addEventListener('click', ()=>{
-  if(!lastResult) return;
-  const R = lastResult;
-  const lines = ['Dia;Filial;MELI Fonte A;MELI Fonte B;Delta MELI;ID Fonte A;ID Fonte B;Delta ID;Volume previsto;HC S&OP;HC produtividade;%ABS'];
-  R.dayKeys.forEach(dk=>R.filiais.forEach(fk=>{
-    const c = R.cells[dk+'|'+fk];
-    if(c.aM==null && !c.recs.length) return;
-    const s = c.aSite||{};
-    lines.push([dk, filialLabel(fk),
-      c.aM!=null?c.aM:'', c.bM, c.aM!=null?c.bM-c.aM:'',
-      c.aI!=null?c.aI:'', c.bI, c.aI!=null?c.bI-c.aI:'',
-      s.vol!=null?s.vol:'', s.hcSop!=null?s.hcSop:'', s.hcProd!=null?s.hcProd:'', s.abs||''].join(';'));
+function renderFilters(){
+  const R=lastResult, f=R.filters;
+  const emps=[...new Set(R.recordsB.map(r=>r.empresaDiarista).filter(Boolean))].sort();
+  const turnos=[...new Set(R.recordsB.map(r=>r.turno).filter(Boolean))].sort();
+  $('filters').innerHTML = `
+    <div class="ctrl"><label>Operação</label><select id="fOp"><option value="">Todas</option>${R.ops.map(o=>`<option ${f.op===o?'selected':''}>${escapeHtml(o)}</option>`).join('')}</select></div>
+    <div class="ctrl"><label>Filial</label><select id="fFil"><option value="">Todas</option>${R.fils.map(k=>`<option value="${k}" ${f.fil===k?'selected':''}>${escapeHtml(branchLabel(k))}</option>`).join('')}</select></div>
+    <div class="ctrl"><label>Solicitante</label><select id="fSol"><option value="">Ambos</option><option ${f.sol==='MELI'?'selected':''}>MELI</option><option ${f.sol==='ID'?'selected':''}>ID</option></select></div>
+    <div class="ctrl"><label>Empresa</label><select id="fEmp"><option value="">Todas</option>${emps.map(e=>`<option ${f.emp===e?'selected':''}>${escapeHtml(e)}</option>`).join('')}</select></div>
+    <div class="ctrl"><label>Turno</label><select id="fTurno"><option value="">Todos</option>${turnos.map(t=>`<option ${f.turno===t?'selected':''}>${escapeHtml(t)}</option>`).join('')}</select></div>
+    <div class="ctrl"><label>Dia da semana</label><select id="fWd"><option value="">Todos</option>${WD.map((w,i)=>`<option value="${i}" ${f.wd==String(i)?'selected':''}>${w}</option>`).join('')}</select></div>
+    <div class="ctrl"><label>Ver apenas</label><select id="fOnly"><option value="">Tudo</option><option value="div" ${f.only==='div'?'selected':''}>Divergências</option><option value="exc" ${f.only==='exc'?'selected':''}>Excedentes</option><option value="def" ${f.only==='def'?'selected':''}>Déficits</option></select></div>
+    <button class="ghost" id="fClear">Limpar filtros</button>`;
+  const upd=()=>{ R.filters={op:$('fOp').value,fil:$('fFil').value,sol:$('fSol').value,emp:$('fEmp').value,turno:$('fTurno').value,wd:$('fWd').value,only:$('fOnly').value};
+    renderDaily();renderAccumulated();renderFinancial();renderNominal();renderCostAlerts();renderStoryAndKpis(); };
+  ['fOp','fFil','fSol','fEmp','fTurno','fWd','fOnly'].forEach(id=>$(id).addEventListener('change',upd));
+  $('fClear').addEventListener('click',()=>{R.filters={op:'',fil:'',sol:'',emp:'',turno:'',wd:'',only:''};renderFilters();upd();});
+}
+
+let dailyView='both';
+$('viewToggle').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  $('viewToggle').querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); dailyView=b.dataset.v; renderDaily();
+}));
+function renderDaily(){
+  const R=lastResult, cmp=buildComparisonCells().filter(passFilter);
+  const view=dailyView;
+  // head
+  let head='<tr><th>Data</th>';
+  if(view!=='id'){ head+='<th class="grp-meli">MELI A</th><th class="grp-meli">MELI B</th><th class="grp-meli">Gap</th>'; }
+  if(view!=='meli'){ head+='<th class="grp-id">ID A</th><th class="grp-id">ID B</th><th class="grp-id">Gap</th>'; }
+  head+='<th class="grp-tot">Total A</th><th class="grp-tot">Total B</th><th class="grp-tot">Gap</th><th>Status</th></tr>';
+  $('dailyHead').innerHTML=head;
+  const nCols = (view==='both'?9:6)+2;
+
+  const byDay=new Map(); R.range.forEach(iso=>byDay.set(iso,[]));
+  cmp.forEach(c=>{ if(byDay.has(c.iso)) byDay.get(c.iso).push(c); });
+
+  const rows=[]; let TMA=0,TMB=0,TIA=0,TIB=0;
+  R.range.forEach(iso=>{
+    const cs=byDay.get(iso)||[];
+    const mA=sum(cs.filter(c=>c.sol==='MELI'),'a'), mB=sum(cs.filter(c=>c.sol==='MELI'),'b');
+    const iA=sum(cs.filter(c=>c.sol==='ID'),'a'), iB=sum(cs.filter(c=>c.sol==='ID'),'b');
+    const hasA=cs.some(c=>c.a!=null), hasB=cs.some(c=>c.b!=null);
+    const notClass=cs.some(c=>c.op==='Não classificado' && (c.a!=null||c.b!=null));
+    TMA+=mA;TMB+=mB;TIA+=iA;TIB+=iB;
+    const totA=mA+iA, totB=mB+iB;
+    const stt=dayStatus(totA,totB,hasA,hasB,{notClass});
+    let tds=`<td class="lft">${fmtBR(iso)} <span class="wd">${wdLabel(iso)}</span></td>`;
+    if(view!=='id') tds+=`<td class="num">${hasA?mA:'—'}</td><td class="num">${hasB?mB:'—'}</td>${gapCell(mB-mA,hasA||hasB)}`;
+    if(view!=='meli') tds+=`<td class="num">${hasA?iA:'—'}</td><td class="num">${hasB?iB:'—'}</td>${gapCell(iB-iA,hasA||hasB)}`;
+    tds+=`<td class="num">${hasA?totA:'—'}</td><td class="num">${hasB?totB:'—'}</td>${gapCell(totB-totA,hasA||hasB)}<td><span class="status ${stt.c}">${stt.t}</span></td>`;
+    rows.push(`<tr class="expandable" data-day="${iso}">${tds}</tr>
+      <tr class="detail" data-detail="${iso}" style="display:none"><td colspan="${nCols}">${dailyDetail(cs,iso)}</td></tr>`);
+  });
+  // total
+  const gTotA=TMA+TIA, gTotB=TMB+TIB;
+  let tot=`<tr class="tot"><td class="lft">TOTAL período</td>`;
+  if(view!=='id') tot+=`<td class="num">${TMA}</td><td class="num">${TMB}</td>${gapCell(TMB-TMA,true)}`;
+  if(view!=='meli') tot+=`<td class="num">${TIA}</td><td class="num">${TIB}</td>${gapCell(TIB-TIA,true)}`;
+  tot+=`<td class="num">${gTotA}</td><td class="num">${gTotB}</td>${gapCell(gTotB-gTotA,true)}<td></td></tr>`;
+  rows.push(tot);
+  $('dailyBody').innerHTML=rows.join('');
+  $('dailyBody').querySelectorAll('tr.expandable').forEach(tr=>tr.addEventListener('click',()=>{
+    const d=$('dailyBody').querySelector(`tr[data-detail="${tr.dataset.day}"]`); d.style.display=d.style.display==='none'?'':'none';
   }));
-  const blob = new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'confronto_diaristas_periodo.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
+}
+function sum(arr,k){ return arr.reduce((t,c)=>t+(c[k]||0),0); }
+
+function dailyDetail(cells,iso){
+  const R=lastResult;
+  if(!cells.length) return '<em style="color:var(--ink-dim)">Sem dados nas duas fontes para este dia (dentro dos filtros).</em>';
+  const ops=[...new Set(cells.map(c=>c.op))].sort((a,b)=>{const i=OPERACOES.indexOf(a),j=OPERACOES.indexOf(b);return (i<0?9:i)-(j<0?9:j);});
+  let html='';
+  ops.forEach(op=>{
+    html+=`<div class="op-h">operação ${escapeHtml(op)}</div><table class="mini-tbl"><thead><tr>
+      <th style="text-align:left">Filial</th><th>MELI A</th><th>MELI B</th><th>Gap</th><th>ID A</th><th>ID B</th><th>Gap</th><th>Volume</th><th>HC S&amp;OP</th><th>%ABS</th></tr></thead><tbody>`;
+    R.fils.forEach(fk=>{
+      const m=cells.find(c=>c.op===op&&c.fk===fk&&c.sol==='MELI');
+      const i=cells.find(c=>c.op===op&&c.fk===fk&&c.sol==='ID');
+      if(!m&&!i) return;
+      const mA=m&&m.a!=null?m.a:null,mB=m?m.b||0:0,iA=i&&i.a!=null?i.a:null,iB=i?i.b||0:0;
+      const meta=(m&&m.meta)||(i&&i.meta)||{};
+      html+=`<tr><td class="lft">${escapeHtml(branchLabel(fk))}</td>
+        <td class="num">${mA!=null?mA:'—'}</td><td class="num">${mB}</td>${gapCell((mB)-(mA||0),mA!=null||mB>0)}
+        <td class="num">${iA!=null?iA:'—'}</td><td class="num">${iB}</td>${gapCell((iB)-(iA||0),iA!=null||iB>0)}
+        <td class="num">${meta.vol!=null?fmtInt(meta.vol):'—'}</td><td class="num">${meta.hcSop!=null?meta.hcSop:'—'}</td><td class="num">${escapeHtml(meta.abs||'—')}</td></tr>`;
+    });
+    html+='</tbody></table>';
+  });
+  // nomes B do dia
+  const recsB=[]; cells.forEach(c=>recsB.push(...(c.recsB||[])));
+  if(recsB.length){
+    html+=`<details class="adv" style="margin-top:8px"><summary>Ver ${recsB.length} nome(s) da Fonte B neste dia</summary>${namesHtml(recsB)}</details>`;
+  }
+  return html;
+}
+function namesHtml(recs){
+  const dupKey=new Map(); recs.forEach(r=>{if(r.grootId){const k=r.filialKey+'|'+r.grootId;dupKey.set(k,(dupKey.get(k)||0)+1);}});
+  const li=r=>`<li style="${!r.grootId?'color:var(--warn)':(dupKey.get(r.filialKey+'|'+r.grootId)>1?'color:var(--bad)':'')}">${escapeHtml(r.nome||'(sem nome)')} <span style="opacity:.55;font-family:var(--mono);font-size:11px">${escapeHtml(r.grootId||'s/ID')} · ${escapeHtml(r.operacao)}${r.turno?(' · '+escapeHtml(r.turno)):''}${r.empresaDiarista?(' · '+escapeHtml(r.empresaDiarista)):''}</span></li>`;
+  const meli=recs.filter(r=>r.solicitante==='MELI'),id=recs.filter(r=>r.solicitante==='ID'),out=recs.filter(r=>r.solicitante!=='MELI'&&r.solicitante!=='ID');
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px">
+    <div><h4 style="color:var(--amber);font-family:var(--mono);font-size:11px">MELI · ${meli.length}</h4><ol style="padding-left:20px;color:var(--ink-soft);line-height:1.7;font-size:12.5px">${meli.map(li).join('')||'<em>—</em>'}</ol></div>
+    <div><h4 style="color:var(--blue);font-family:var(--mono);font-size:11px">ID · ${id.length}</h4><ol style="padding-left:20px;color:var(--ink-soft);line-height:1.7;font-size:12.5px">${id.map(li).join('')||'<em>—</em>'}</ol>
+    ${out.length?`<h4 style="color:var(--warn);font-family:var(--mono);font-size:11px;margin-top:8px">VAZIO/OUTRO · ${out.length}</h4><ol style="padding-left:20px;color:var(--ink-soft);font-size:12.5px">${out.map(li).join('')}</ol>`:''}</div></div>`;
+}
+
+/* acumulado */
+let accBy='operacao';
+$('accToggle').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  $('accToggle').querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');accBy=b.dataset.a;renderAccumulated();
+}));
+function renderAccumulated(){
+  const R=lastResult, cmp=buildComparisonCells().filter(passFilter);
+  const keyFn = c=> accBy==='operacao'?c.op : accBy==='filial'?c.fk : c.sol;
+  const labFn = k=> accBy==='filial'?branchLabel(k):k;
+  const groups=new Map();
+  cmp.forEach(c=>{ const k=keyFn(c); if(!groups.has(k)) groups.set(k,{a:0,b:0,exp:0,defc:0,defv:0,daysA:new Set(),daysB:new Set(),cells:[]}); const g=groups.get(k);
+    g.a+=c.a||0; g.b+=c.b||0; g.exp+=c.exposure; g.defc+=c.deficit; g.defv+=c.deficitValue;
+    if(c.a!=null) g.daysA.add(c.iso); if(c.b!=null) g.daysB.add(c.iso); g.cells.push(c); });
+  $('accHead').innerHTML=`<tr><th>${accBy==='operacao'?'Operação':accBy==='filial'?'Filial':'Solicitante'}</th>
+    <th>Planejado (A)</th><th>Realizado (B)</th><th>Diferença</th><th>Dias A</th><th>Dias B</th><th>Dias ausentes</th><th class="grp-tot">Exposição</th><th>Status</th></tr>`;
+  const rows=[]; let TA=0,TB=0,TE=0;
+  [...groups.entries()].sort((a,b)=>b[1].exp-a[1].exp).forEach(([k,g])=>{
+    TA+=g.a;TB+=g.b;TE+=g.exp;
+    const diff=g.b-g.a; const missing=R.range.filter(iso=>!g.daysB.has(iso)&&g.daysA.has(iso)).length;
+    const stt = diff>0?{t:'Excedente',c:'s-exc'}:diff<0?{t:'Déficit de cobertura',c:'s-def'}:{t:'Conferido',c:'s-ok'};
+    rows.push(`<tr><td class="lft">${escapeHtml(labFn(k))}</td>
+      <td class="num">${g.a}</td><td class="num">${g.b}</td>
+      <td>${gapInline(diff)}</td>
+      <td class="num">${g.daysA.size}</td><td class="num">${g.daysB.size}</td><td class="num">${missing}</td>
+      <td class="money">${fmtMoney(g.exp)}</td><td><span class="status ${stt.c}">${stt.t}</span></td></tr>`);
+  });
+  rows.push(`<tr class="tot"><td class="lft">TOTAL</td><td class="num">${TA}</td><td class="num">${TB}</td><td>${gapInline(TB-TA)}</td><td></td><td></td><td></td><td class="money">${fmtMoney(TE)}</td><td></td></tr>`);
+  $('accBody').innerHTML=rows.join('');
+}
+function gapInline(g){ const cls=g===0?'g0':g>0?'gpos':'gneg'; return `<span class="gap ${cls}">${g>0?'+':''}${g}</span>`; }
+
+/* financeiro */
+function renderFinancial(){
+  const R=lastResult, cmp=buildComparisonCells().filter(passFilter);
+  let bruta=0, deficitCount=0, deficitVal=0;
+  cmp.forEach(c=>{ bruta+=c.exposure; deficitCount+=c.deficit; deficitVal+=c.deficitValue; });
+  // custo de duplicidades (Fonte B) dentro do range/filtros
+  const dupCost = dupExactCostB();
+  const saneada = bruta; // exposição já é sobre contagem no modo escolhido
+  $('finBlock').innerHTML=`
+    <div class="kpis">
+      <div class="kpi k-bad click" data-fin="exp"><div class="n">${fmtMoney(bruta)}</div><div class="l">Exposição bruta (excedentes B&gt;A)</div><div class="cta">ver células ▸</div></div>
+      <div class="kpi k-warn click" data-fin="dup"><div class="n">${fmtMoney(dupCost.value)}</div><div class="l">Custo potencial de duplicidades (${dupCost.count})</div><div class="cta">ver duplicidades ▸</div></div>
+      <div class="kpi k-amber"><div class="n">${fmtMoney(Math.max(bruta-dupCost.value,0))}</div><div class="l">Exposição após saneamento (estimada)</div></div>
+      <div class="kpi k-purple click" data-fin="def"><div class="n">${deficitCount} <span class="sep">·</span> ${fmtMoney(deficitVal)}</div><div class="l">Déficit de cobertura (a classificar)</div><div class="cta">ver déficits ▸</div></div>
+    </div>
+    <div class="insight i-info" style="margin-top:6px"><b>Déficit de cobertura não é economia.</b> Representa diárias previstas na Fonte A sem registro correspondente na Fonte B — até classificar a causa (cancelamento, atraso de lançamento ou base incompleta), o valor fica pendente de validação. Exposição e déficit são calculados <b>célula a célula</b> e nunca se compensam entre dias, operações, filiais ou solicitantes.</div>`;
+  $('finBlock').querySelectorAll('[data-fin]').forEach(k=>k.addEventListener('click',()=>{
+    const t=k.dataset.fin;
+    if(t==='exp') openCellDrawer('Células com exposição (B > A)', cmp.filter(c=>c.exposure>0));
+    else if(t==='def') openCellDrawer('Células com déficit de cobertura (A > B)', cmp.filter(c=>c.deficit>0));
+    else openDrawer('Duplicidades exatas na Fonte B (custo potencial)', dupCost.html);
+  }));
+}
+function dupExactCostB(){
+  const R=lastResult; const seen=new Set(); const dups=[];
+  R.recordsB.forEach(r=>{ if(!inRange(r.data)) return; if(!passRecordFilter(r)) return;
+    const k=r.data+'|'+r.operacao+'|'+r.filialKey+'|'+r.solicitante+'|'+r.grootId+'#'+r.nome.toLowerCase();
+    if(seen.has(k)) dups.push(r); else seen.add(k); });
+  let value=0; dups.forEach(r=>value+=resolveCost(r.data,r.solicitante,r.operacao));
+  const html = dups.length? dups.map(r=>`<div class="rej-line">${escapeHtml(fmtBR(r.data))} · ${escapeHtml(branchLabel(r.filialKey))} · ${escapeHtml(r.operacao)} · ${escapeHtml(r.solicitante)} · ${escapeHtml(r.nome)} (${escapeHtml(r.grootId||'s/ID')}) → ${fmtMoney(resolveCost(r.data,r.solicitante,r.operacao))}</div>`).join(''):'<em>Nenhuma duplicidade exata.</em>';
+  return {count:dups.length, value, html};
+}
+function inRange(iso){ return iso>=lastResult.ini && iso<=lastResult.fim; }
+function passRecordFilter(r){
+  const f=lastResult.filters;
+  if(f.op&&r.operacao!==f.op) return false;
+  if(f.fil&&r.filialKey!==f.fil) return false;
+  if(f.sol&&r.solicitante!==f.sol) return false;
+  if(f.emp&&r.empresaDiarista!==f.emp) return false;
+  if(f.turno&&r.turno!==f.turno) return false;
+  if(f.wd&&String(weekdayOf(r.data))!==f.wd) return false;
+  return true;
+}
+
+/* nominal (GROOT ID) */
+function detectNominalConflicts(){
+  const R=lastResult;
+  const hasIdsA = R.recordsA && R.recordsA.some(r=>r.grootId);
+  const recsA = (R.recordsA||[]).filter(r=>inRange(r.data)&&passRecordFilter(r));
+  const recsB = R.recordsB.filter(r=>inRange(r.data)&&passRecordFilter(r));
+  const idsA=new Map(), idsB=new Map();
+  recsA.forEach(r=>r.grootId&&idsA.set(r.grootId,(idsA.get(r.grootId)||[]).concat(r)));
+  recsB.forEach(r=>r.grootId&&idsB.set(r.grootId,(idsB.get(r.grootId)||[]).concat(r)));
+  const both=[],onlyA=[],onlyB=[],dupA=[],dupB=[],sameIdDiffName=[],sameNameDiffId=[],noId=[],unkSolic=[];
+  const allIds=new Set([...idsA.keys(),...idsB.keys()]);
+  allIds.forEach(id=>{
+    const a=idsA.get(id),b=idsB.get(id);
+    if(a&&b) both.push({id,a,b}); else if(a) onlyA.push({id,recs:a}); else onlyB.push({id,recs:b});
+    if(a&&a.length>1) dupA.push({id,recs:a}); if(b&&b.length>1) dupB.push({id,recs:b});
+    const names=new Set([...(a||[]),...(b||[])].map(r=>r.nome.toLowerCase()).filter(Boolean));
+    if(names.size>1) sameIdDiffName.push({id,names:[...names]});
+  });
+  const nameMap=new Map();
+  [...recsA,...recsB].forEach(r=>{ if(!r.nome) return; const k=r.nome.toLowerCase(); nameMap.set(k,(nameMap.get(k)||new Set())); if(r.grootId) nameMap.get(k).add(r.grootId); });
+  nameMap.forEach((ids,nm)=>{ if(ids.size>1) sameNameDiffId.push({nome:nm,ids:[...ids]}); });
+  [...recsA,...recsB].forEach(r=>{ if(!r.grootId) noId.push(r); if(r.solicitante==='OUTRO'||r.solicitante==='VAZIO') unkSolic.push(r); });
+  return {hasIdsA,recsA,recsB,both,onlyA,onlyB,dupA,dupB,sameIdDiffName,sameNameDiffId,noId,unkSolic};
+}
+function renderNominal(){
+  const N=detectNominalConflicts();
+  if(!N.recsB.length || (!N.hasIdsA && lastResult.A.kind==='resumo')){
+    $('nominalMeta').textContent = lastResult.A.kind==='resumo'?'Fonte A é resumo (sem nomes) — visão nominal usa apenas a Fonte B':'';
+  } else $('nominalMeta').textContent='';
+  const card=(v,l,cls,key)=>`<div class="kpi ${cls} ${v?'click':''}" ${v?`data-nom="${key}"`:''}><div class="n">${v}</div><div class="l">${l}</div>${v?'<div class="cta">ver ▸</div>':''}</div>`;
+  $('nominalBlock').innerHTML=`<div class="kpis">
+    ${card(N.both.length,'Presente nas duas fontes','k-ok','both')}
+    ${card(N.onlyA.length,'Somente na Fonte A','k-amber','onlyA')}
+    ${card(N.onlyB.length,'Somente na Fonte B','k-blue','onlyB')}
+    ${card(N.dupA.length,'Duplicado na Fonte A','k-warn','dupA')}
+    ${card(N.dupB.length,'Duplicado na Fonte B','k-warn','dupB')}
+    ${card(N.sameIdDiffName.length,'Mesmo GROOT ID, nomes diferentes','k-bad','sidn')}
+    ${card(N.sameNameDiffId.length,'Mesmo nome, GROOT IDs diferentes','k-bad','sndi')}
+    ${card(N.noId.length,'Sem GROOT ID','k-warn','noid')}
+    ${card(N.unkSolic.length,'Solicitante não reconhecido','k-warn','unk')}
+  </div>`;
+  $('nominalBlock').querySelectorAll('[data-nom]').forEach(k=>k.addEventListener('click',()=>drillNominal(k.dataset.nom,N)));
+}
+function drillNominal(kind,N){
+  let title='',html='';
+  const recLine=r=>`<div class="rej-line">${escapeHtml(fmtBR(r.data))} · ${escapeHtml(r.origem)} · ${escapeHtml(branchLabel(r.filialKey))} · ${escapeHtml(r.operacao)} · ${escapeHtml(r.solicitante)} · ${escapeHtml(r.nome||'(sem nome)')} (${escapeHtml(r.grootId||'s/ID')})</div>`;
+  if(kind==='both'){ title='Presente nas duas fontes'; html=N.both.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> — A:${x.a.length}× · B:${x.b.length}× — ${escapeHtml((x.a[0]||x.b[0]).nome)}</div>`).join(''); }
+  else if(kind==='onlyA'){ title='Somente na Fonte A'; html=N.onlyA.flatMap(x=>x.recs).map(recLine).join(''); }
+  else if(kind==='onlyB'){ title='Somente na Fonte B'; html=N.onlyB.flatMap(x=>x.recs).map(recLine).join(''); }
+  else if(kind==='dupA'){ title='Duplicado na Fonte A'; html=N.dupA.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> ${escapeHtml(x.recs[0].nome)} — ${x.recs.length}×</div>`).join(''); }
+  else if(kind==='dupB'){ title='Duplicado na Fonte B'; html=N.dupB.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> ${escapeHtml(x.recs[0].nome)} — ${x.recs.length}×</div>`).join(''); }
+  else if(kind==='sidn'){ title='Mesmo GROOT ID com nomes diferentes'; html=N.sameIdDiffName.map(x=>`<div class="rej-line"><b>${escapeHtml(x.id)}</b> → ${x.names.map(escapeHtml).join(' / ')}</div>`).join(''); }
+  else if(kind==='sndi'){ title='Mesmo nome com GROOT IDs diferentes'; html=N.sameNameDiffId.map(x=>`<div class="rej-line">${escapeHtml(x.nome)} → ${x.ids.map(escapeHtml).join(' / ')}</div>`).join(''); }
+  else if(kind==='noid'){ title='Sem GROOT ID'; html=N.noId.map(recLine).join(''); }
+  else if(kind==='unk'){ title='Solicitante não reconhecido'; html=N.unkSolic.map(recLine).join(''); }
+  openDrawer(title, html||'<em>Nenhum.</em>');
+}
+
+/* alertas de custo */
+function renderCostAlerts(){
+  const cmp=buildComparisonCells().filter(passFilter);
+  const exc=cmp.filter(c=>c.gap>0).sort((a,b)=>b.exposure-a.exposure);
+  const totM=cmp.filter(c=>c.sol==='MELI').reduce((t,c)=>t+Math.max(c.gap,0),0);
+  const totI=cmp.filter(c=>c.sol==='ID').reduce((t,c)=>t+Math.max(c.gap,0),0);
+  const totExp=cmp.reduce((t,c)=>t+c.exposure,0);
+  const out=[];
+  if(!exc.length){ out.push(`<div class="insight i-ok"><b>Sem custo adicional no período/filtros.</b> Nenhuma célula diária tem Fonte B acima da Fonte A.</div>`); }
+  else {
+    out.push(`<div class="insight i-cost"><span class="cost-badge">TOTAL</span><b>+${totM} MELI</b> e <b>+${totI} ID</b> excedentes no período — exposição estimada <b>${fmtMoney(totExp)}</b> (soma célula a célula).</div>`);
+    exc.slice(0,8).forEach(c=>out.push(`<div class="insight i-cost"><span class="cost-badge">CUSTO</span><b>${escapeHtml(fmtBR(c.iso))} · ${escapeHtml(c.op)} · ${escapeHtml(branchLabel(c.fk))} · ${escapeHtml(c.sol)}:</b> +${c.gap} além do previsto (${c.a==null?'sem A':c.a} → ${c.b}) · ${fmtMoney(c.exposure)}.</div>`));
+    if(exc.length>8) out.push(`<div class="insight i-cost">…e mais ${exc.length-8} célula(s) excedente(s).</div>`);
+  }
+  $('costAlerts').innerHTML=out.join('');
+}
+
+/* insights */
+function renderInsights(){
+  const R=lastResult, cmp=buildComparisonCells();
+  const ins=[];
+  // dias sem fonte B mas com A
+  const semB=R.range.filter(iso=>{ const cs=cmp.filter(c=>c.iso===iso); return cs.some(c=>c.a!=null)&&!cs.some(c=>c.b!=null); });
+  if(semB.length) ins.push(`<div class="insight i-warn"><b>Dias com previsão (A) e sem registro (B):</b> ${semB.map(fmtBR).join(', ')}. Déficit de cobertura — verificar lançamento ou base incompleta.</div>`);
+  const semA=R.range.filter(iso=>{ const cs=cmp.filter(c=>c.iso===iso); return cs.some(c=>c.b!=null)&&!cs.some(c=>c.a!=null); });
+  if(semA.length) ins.push(`<div class="insight i-info"><b>Dias com registro (B) e sem previsão (A):</b> ${semA.map(fmtBR).join(', ')}. O previsto desses dias não foi informado na Fonte A.</div>`);
+  const semDados=R.range.filter(iso=>!cmp.some(c=>c.iso===iso));
+  if(semDados.length) ins.push(`<div class="insight i-info"><b>Dias do intervalo sem dados em nenhuma fonte:</b> ${semDados.map(fmtBR).join(', ')} — mantidos na tabela para o período ficar completo.</div>`);
+  // conflitos de importação A
+  if(R.A.kind==='resumo' && R.A.resumo.conflicts.length)
+    ins.push(`<div class="insight i-bad"><b>Conflitos de importação na Fonte A:</b> ${R.A.resumo.conflicts.length} combinação(ões) data×operação×filial×solicitante com valores diferentes em blocos repetidos. Mantido o primeiro valor; revisar o texto colado.</div>`);
+  if(R.A.kind==='resumo' && R.A.resumo.identicalDups.length)
+    ins.push(`<div class="insight i-ok"><b>${R.A.resumo.identicalDups.length} bloco(s) idêntico(s) ignorado(s)</b> na Fonte A (ex.: 16/07 colado duas vezes) — não foram contados em dobro.</div>`);
+  // op não classificada
+  const notClass=R.recordsB.filter(r=>r.operacao==='Não classificado'&&inRange(r.data));
+  if(notClass.length) ins.push(`<div class="insight i-warn"><b>${notClass.length} registro(s) da Fonte B com operação não classificada.</b> Ajuste o mapeamento da aba ou a coluna OPERAÇÃO/ESCALA.</div>`);
+  // solicitante vazio
+  const vaz=R.recordsB.filter(r=>r.solicitante==='VAZIO'&&inRange(r.data));
+  if(vaz.length){ const porFil={}; vaz.forEach(r=>porFil[r.filialKey]=(porFil[r.filialKey]||0)+1);
+    ins.push(`<div class="insight i-bad"><b>Solicitante em branco (B):</b> ${vaz.length} registro(s) — ${Object.entries(porFil).map(([f,n])=>escapeHtml(branchLabel(f))+': '+n).join(' · ')}. Não contam como MELI nem ID; custo indefinido.</div>`);
+  }
+  // recorrentes
+  const freq={}; R.recordsB.forEach(r=>{ if(!r.grootId||!inRange(r.data)) return; freq[r.grootId]=freq[r.grootId]||{nome:r.nome,dias:new Set()}; freq[r.grootId].dias.add(r.data); });
+  const top=Object.entries(freq).map(([id,v])=>({id,nome:v.nome,n:v.dias.size})).filter(t=>t.n>=5).sort((a,b)=>b.n-a.n).slice(0,5);
+  if(top.length) ins.push(`<div class="insight i-info"><b>Diaristas mais recorrentes:</b> ${top.map(t=>escapeHtml(t.nome)+' ('+escapeHtml(t.id)+', '+t.n+' dias)').join(' · ')}. Recorrência alta pode indicar demanda fixa.</div>`);
+  if(!ins.length) ins.push('<div class="insight i-ok">Nenhuma irregularidade encontrada no período/filtros.</div>');
+  $('insights').innerHTML=ins.join('');
+}
+
+/* storytelling + KPIs */
+function renderStoryAndKpis(){
+  const R=lastResult, cmp=buildComparisonCells().filter(passFilter);
+  const exc=cmp.filter(c=>c.gap>0), def=cmp.filter(c=>c.gap<0);
+  const totExp=cmp.reduce((t,c)=>t+c.exposure,0);
+  const filExp={}; exc.forEach(c=>filExp[c.fk]=(filExp[c.fk]||0)+c.exposure);
+  const topFil=Object.entries(filExp).sort((a,b)=>b[1]-a[1])[0];
+  const excDays=[...new Set(exc.map(c=>c.iso))].sort();
+  const nExcReg=exc.reduce((t,c)=>t+c.gap,0);
+  const tMA=cmp.filter(c=>c.sol==='MELI').reduce((t,c)=>t+(c.a||0),0), tMB=cmp.filter(c=>c.sol==='MELI').reduce((t,c)=>t+(c.b||0),0);
+  const tIA=cmp.filter(c=>c.sol==='ID').reduce((t,c)=>t+(c.a||0),0), tIB=cmp.filter(c=>c.sol==='ID').reduce((t,c)=>t+(c.b||0),0);
+  // topo dias por exposição
+  const dayExp={}; exc.forEach(c=>dayExp[c.iso]=(dayExp[c.iso]||0)+c.exposure);
+  const topDays=Object.entries(dayExp).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([d])=>fmtBR(d));
+  const filComExc=new Set(exc.map(c=>c.fk)).size;
+
+  $('story').innerHTML=`
+    <div class="story-card f"><h4>O fato</h4><p>Entre ${fmtBRfull(R.ini)} e ${fmtBRfull(R.fim)}, a Fonte B tem <b>${nExcReg}</b> registro(s) acima da Fonte A${filComExc?`, concentrados em <b>${filComExc}</b> filial(is)`:''}. Déficit de cobertura: <b>${def.reduce((t,c)=>t+(-c.gap),0)}</b> diária(s).</p></div>
+    <div class="story-card w"><h4>Por que importa</h4><p>A divergência representa exposição potencial de <b>${fmtMoney(totExp)}</b>${topFil?`, concentrada em <b>${escapeHtml(branchLabel(topFil[0]))}</b> (${fmtMoney(topFil[1])})`:''}.</p></div>
+    <div class="story-card d"><h4>Decisão recomendada</h4><p>${excDays.length?`Validar primeiro os registros excedentes de <b>${topDays.join(' e ')||excDays.slice(0,2).map(fmtBR).join(' e ')}</b> e corrigir as duplicidades antes da aprovação.`:'Sem excedentes no recorte atual — validar os déficits de cobertura e confirmar se a base B está completa.'}</p></div>`;
+
+  const dupB=dupExactCostB();
+  $('kpis').innerHTML=`
+    <div class="kpi k-amber"><div class="n">${R.range.length}</div><div class="l">Dias no período</div></div>
+    <div class="kpi k-amber"><div class="n">${tMA} <span class="sep">→</span> ${tMB}</div><div class="l">MELI: A → B (Δ ${tMB-tMA>0?'+':''}${tMB-tMA})</div></div>
+    <div class="kpi k-blue"><div class="n">${tIA} <span class="sep">→</span> ${tIB}</div><div class="l">ID: A → B (Δ ${tIB-tIA>0?'+':''}${tIB-tIA})</div></div>
+    <div class="kpi k-bad click" data-kpi="exp"><div class="n">${fmtMoney(totExp)}</div><div class="l">Exposição (excedentes)</div><div class="cta">ver células ▸</div></div>
+    <div class="kpi k-warn click" data-kpi="dup"><div class="n">${dupB.count}</div><div class="l">Duplicidades exatas (B)</div><div class="cta">ver ▸</div></div>
+    <div class="kpi k-purple click" data-kpi="def"><div class="n">${def.reduce((t,c)=>t+(-c.gap),0)}</div><div class="l">Déficit de cobertura</div><div class="cta">ver ▸</div></div>`;
+  $('kpis').querySelectorAll('[data-kpi]').forEach(k=>k.addEventListener('click',()=>{
+    const t=k.dataset.kpi;
+    if(t==='exp') openCellDrawer('Células com exposição (B > A)', exc);
+    else if(t==='def') openCellDrawer('Células com déficit de cobertura (A > B)', def);
+    else openDrawer('Duplicidades exatas na Fonte B', dupB.html);
+  }));
+}
+
+/* =========================================================================
+   DRAWER
+   ========================================================================= */
+function openDrawer(title, html){ $('drawerTitle').textContent=title; $('drawerBody').innerHTML=html; $('drawer').classList.add('open'); }
+function openCellDrawer(title, cells){
+  const rows=cells.sort((a,b)=>(b.exposure||0)-(a.exposure||0)).map(c=>`<div class="rej-line">${escapeHtml(fmtBR(c.iso))} · ${escapeHtml(c.op)} · ${escapeHtml(branchLabel(c.fk))} · ${escapeHtml(c.sol)}: A ${c.a==null?'—':c.a} → B ${c.b==null?'—':c.b} (gap ${c.gap>0?'+':''}${c.gap})${c.exposure?(' · '+fmtMoney(c.exposure)):''}${c.deficit?(' · déficit '+c.deficit):''}</div>`).join('');
+  openDrawer(title+` — ${cells.length} célula(s)`, rows||'<em>Nenhuma.</em>');
+}
+$('drawerClose').addEventListener('click',()=>$('drawer').classList.remove('open'));
+$('drawer').addEventListener('click',e=>{ if(e.target===$('drawer')) $('drawer').classList.remove('open'); });
+
+/* =========================================================================
+   EXPORTAÇÕES
+   ========================================================================= */
+function comparisonMatrix(){
+  const R=lastResult, cmp=buildComparisonCells();
+  return cmp.map(c=>({Data:fmtBRfull(c.iso),Operacao:c.op,Filial:branchLabel(c.fk),Solicitante:c.sol,
+    Planejado_A:c.a==null?'':c.a,Realizado_B:c.b==null?'':c.b,Gap:c.gap,Exposicao:c.exposure?c.exposure.toFixed(2):'',Deficit:c.deficit||''}));
+}
+function csvEscape(v){ v=String(v==null?'':v); return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function toCSV(rows){ if(!rows.length) return ''; const head=Object.keys(rows[0]);
+  return [head.join(';')].concat(rows.map(r=>head.map(h=>csvEscape(r[h])).join(';'))).join('\r\n'); }
+function download(name, content, type, bom){ const parts = bom===false ? [content] : ['﻿'+content];
+  const blob=new Blob(parts,{type}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+$('btnCsv').addEventListener('click',()=>{ if(!lastResult) return; download('confronto_diaristas.csv', toCSV(comparisonMatrix()), 'text/csv;charset=utf-8'); });
+
+function exportXLSX(){
+  if(!lastResult) return;
+  const R=lastResult, cmp=buildComparisonCells();
+  const wb=XLSX.utils.book_new();
+  const add=(name,rows)=>XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length?rows:[{'—':''}]), name.slice(0,31));
+  // resumo executivo
+  const totExp=cmp.reduce((t,c)=>t+c.exposure,0), excReg=cmp.reduce((t,c)=>t+Math.max(c.gap,0),0), defReg=cmp.reduce((t,c)=>t+Math.max(-c.gap,0),0);
+  add('Resumo Executivo',[
+    {Indicador:'Período',Valor:fmtBRfull(R.ini)+' a '+fmtBRfull(R.fim)},
+    {Indicador:'Dias no período',Valor:R.range.length},
+    {Indicador:'Modo de contagem',Valor:R.mode},
+    {Indicador:'Registros excedentes (B>A)',Valor:excReg},
+    {Indicador:'Déficit de cobertura (A>B)',Valor:defReg},
+    {Indicador:'Exposição bruta (R$)',Valor:totExp.toFixed(2)},
+    {Indicador:'Duplicidades exatas (B)',Valor:dupExactCostB().count},
+  ]);
+  add('A x B por dia', comparisonMatrix());
+  // acumulados
+  const accRows=(by)=>{ const g=new Map(); cmp.forEach(c=>{const k=by==='operacao'?c.op:by==='filial'?branchLabel(c.fk):c.sol;
+    if(!g.has(k))g.set(k,{k,a:0,b:0,exp:0}); const o=g.get(k);o.a+=c.a||0;o.b+=c.b||0;o.exp+=c.exposure;});
+    return [...g.values()].map(o=>({Grupo:o.k,Planejado_A:o.a,Realizado_B:o.b,Diferenca:o.b-o.a,Exposicao:o.exp.toFixed(2)})); };
+  add('Acum. por operacao', accRows('operacao'));
+  add('Acum. por filial', accRows('filial'));
+  add('Comparacao nominal', nominalRows());
+  add('Fonte A normalizada', normRows(R.recordsA, R.A));
+  add('Fonte B normalizada', normRows(R.recordsB, R.B));
+  add('Duplicidades', R.recordsB.filter((r,i,arr)=>arr.findIndex(x=>x.data===r.data&&x.grootId===r.grootId&&x.nome===r.nome&&x.filialKey===r.filialKey)!==i).map(recRow));
+  const rejA=(R.A.audit&&R.A.audit.rejected)||[], rejB=(R.B.audit&&R.B.audit.rejected)||[];
+  add('Linhas rejeitadas', [...rejA,...rejB].map(r=>({Origem:r.origem,Aba:r.aba,Linha:r.linha,Motivo:r.motivo,Conteudo:r.dump})));
+  add('Op nao classificadas', R.recordsB.filter(r=>r.operacao==='Não classificado').map(recRow));
+  add('Parametros', [
+    {Parametro:'Custo MELI',Valor:R.costs.meli},{Parametro:'Custo ID',Valor:R.costs.id},
+    {Parametro:'Mult. sábado',Valor:R.costs.sat},{Parametro:'Mult. domingo',Valor:R.costs.sun},
+    {Parametro:'Adic. noturno %',Valor:R.costs.night},{Parametro:'Ano padrão',Valor:$('anoPad').value},
+    {Parametro:'Modo contagem',Valor:R.mode},
+  ]);
+  add('Arquivos e abas', [...(R.A.mapping||[]),...(R.B.mapping||[])].map(m=>({Origem:m.origem,Aba:m.aba,Filial:branchLabel(m.filialKey)||m.filial,Operacao:m.operacao,Confianca:m.conf,Registros:m.registros})));
+  XLSX.writeFile(wb,'confronto_diaristas.xlsx');
+}
+function recRow(r){ return {Data:fmtBRfull(r.data),Filial:branchLabel(r.filialKey),Operacao:r.operacao,Turno:r.turno,Solicitante:r.solicitante,Empresa:r.empresaDiarista,GrootID:r.grootId,Nome:r.nome,Cargo:r.cargo,Escala:r.escala,Origem:r.origem,Arquivo:r.arquivo,Aba:r.aba,Linha:r.linha}; }
+function normRows(recs, src){ if(!recs) return src&&src.kind==='resumo'?lastResult.A.cells.map(c=>({Data:fmtBRfull(c.data),Operacao:c.operacao,Filial:branchLabel(c.filialKey),Solicitante:c.solicitante,Quantidade:c.count})):[]; return recs.map(recRow); }
+function nominalRows(){ const N=detectNominalConflicts(); const out=[];
+  N.sameIdDiffName.forEach(x=>out.push({Tipo:'Mesmo ID, nomes diferentes',Chave:x.id,Detalhe:x.names.join(' / ')}));
+  N.sameNameDiffId.forEach(x=>out.push({Tipo:'Mesmo nome, IDs diferentes',Chave:x.nome,Detalhe:x.ids.join(' / ')}));
+  N.dupB.forEach(x=>out.push({Tipo:'Duplicado na B',Chave:x.id,Detalhe:x.recs[0].nome+' ('+x.recs.length+'x)'}));
+  N.noId.forEach(r=>out.push({Tipo:'Sem GROOT ID',Chave:'',Detalhe:fmtBR(r.data)+' '+branchLabel(r.filialKey)+' '+r.nome}));
+  return out.length?out:[{Tipo:'—',Chave:'',Detalhe:''}];
+}
+$('btnXlsx').addEventListener('click',exportXLSX);
+
+function execText(){
+  const R=lastResult, cmp=buildComparisonCells();
+  const totExp=cmp.reduce((t,c)=>t+c.exposure,0), excReg=cmp.reduce((t,c)=>t+Math.max(c.gap,0),0), defReg=cmp.reduce((t,c)=>t+Math.max(-c.gap,0),0);
+  const filExp={}; cmp.filter(c=>c.gap>0).forEach(c=>filExp[c.fk]=(filExp[c.fk]||0)+c.exposure);
+  const top=Object.entries(filExp).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  return `RESUMO EXECUTIVO — Confronto de Diaristas\nPeríodo: ${fmtBRfull(R.ini)} a ${fmtBRfull(R.fim)} (${R.range.length} dias) · modo ${R.mode}\n`
+    +`Excedentes (B>A): ${excReg} · Déficit de cobertura (A>B): ${defReg}\n`
+    +`Exposição potencial: ${fmtMoney(totExp)}\n`
+    +(top.length?`Concentração: ${top.map(([f,v])=>branchLabel(f)+' '+fmtMoney(v)).join(' · ')}\n`:'')
+    +`Duplicidades exatas na base B: ${dupExactCostB().count}\n`;
+}
+function dailyText(){
+  const R=lastResult, cmp=buildComparisonCells();
+  let out='RESUMO OPERACIONAL DIÁRIO\n';
+  R.range.forEach(iso=>{
+    const cs=cmp.filter(c=>c.iso===iso);
+    const mA=sum(cs.filter(c=>c.sol==='MELI'),'a'),mB=sum(cs.filter(c=>c.sol==='MELI'),'b');
+    const iA=sum(cs.filter(c=>c.sol==='ID'),'a'),iB=sum(cs.filter(c=>c.sol==='ID'),'b');
+    out+=`${fmtBR(iso)} ${wdLabel(iso)}: MELI ${mA}→${mB} (${mB-mA>=0?'+':''}${mB-mA}) · ID ${iA}→${iB} (${iB-iA>=0?'+':''}${iB-iA})\n`;
+  });
+  return out;
+}
+function copyText(txt){ navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>{$('copyInfo').textContent='✓ Copiado para a área de transferência.';},()=>{fallbackCopy(txt);}); if(!navigator.clipboard) fallbackCopy(txt); }
+function fallbackCopy(txt){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');$('copyInfo').textContent='✓ Copiado.';}catch(e){$('copyInfo').textContent='Copie manualmente:\n'+txt;} ta.remove(); }
+$('btnCopyExec').addEventListener('click',()=>copyText(execText()));
+$('btnCopyDaily').addEventListener('click',()=>copyText(dailyText()));
+
+/* =========================================================================
+   SESSÃO (persistência local)
+   ========================================================================= */
+const SKEY='confronto_diaristas_session_v2';
+function sessionSnapshot(){
+  return {ts:new Date().toISOString(), anoPad:$('anoPad').value, countMode:$('countMode').value,
+    dtIni:$('dtIni').value, dtFim:$('dtFim').value, textA:$('textA').value, textB:$('textB').value,
+    modeA:activeMode($('modeA')), modeB:activeMode($('modeB')),
+    costs:{meli:$('costMeli').value,id:$('costId').value,sat:$('multSat').value,sun:$('multSun').value,night:$('addNight').value},
+    mapOverrides, fileNameA:fileSrcA?fileSrcA.fileName:'', fileNameB:fileSrcB?fileSrcB.fileName:'',
+    fileRecsA:fileSrcA?fileSrcA:null, fileRecsB:fileSrcB?fileSrcB:null};
+}
+function saveSession(silent){
+  try{ localStorage.setItem(SKEY, JSON.stringify(sessionSnapshot()));
+    if(!silent) $('sessionInfo').textContent='✓ Sessão salva no navegador em '+new Date().toLocaleString('pt-BR')+'. Os dados ficam apenas nesta máquina.';
+  }catch(e){ if(!silent) $('sessionInfo').textContent='Não foi possível salvar (armazenamento cheio ou bloqueado).'; }
+}
+function loadSnapshot(s){
+  if(!s) return;
+  $('anoPad').value=s.anoPad||2026; $('countMode').value=s.countMode||'sane';
+  $('dtIni').value=s.dtIni||''; $('dtFim').value=s.dtFim||'';
+  $('textA').value=s.textA||''; $('textB').value=s.textB||'';
+  if(s.costs){ $('costMeli').value=s.costs.meli;$('costId').value=s.costs.id;$('multSat').value=s.costs.sat;$('multSun').value=s.costs.sun;$('addNight').value=s.costs.night; }
+  mapOverrides=s.mapOverrides||{};
+  if(s.fileRecsA){ fileSrcA=s.fileRecsA; $('fileboxA').classList.add('loaded'); $('fileLabelA').textContent='✅ '+(s.fileNameA||'arquivo A'); }
+  if(s.fileRecsB){ fileSrcB=s.fileRecsB; $('fileboxB').classList.add('loaded'); $('fileLabelB').textContent='✅ '+(s.fileNameB||'arquivo B'); }
+  $('sessionInfo').textContent='Sessão restaurada de '+(s.ts?new Date(s.ts).toLocaleString('pt-BR'):'—');
+  markSteps();
+}
+$('btnSaveSession').addEventListener('click',()=>saveSession(false));
+$('btnExportSession').addEventListener('click',()=>download('sessao_confronto.json', JSON.stringify(sessionSnapshot(),null,2), 'application/json', false));
+$('importSession').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=ev=>{ try{ loadSnapshot(JSON.parse(String(ev.target.result).replace(/^﻿/,''))); }catch(err){ showErr('JSON de sessão inválido: '+err.message); } }; rd.readAsText(f); });
+$('btnClearSession').addEventListener('click',()=>{ localStorage.removeItem(SKEY); $('sessionInfo').textContent='Sessão limpa deste navegador.'; });
+// auto-restore
+try{ const raw=localStorage.getItem(SKEY); if(raw) loadSnapshot(JSON.parse(raw)); }catch(e){}
 </script>
 </body>
 </html>
